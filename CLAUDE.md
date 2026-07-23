@@ -14,11 +14,22 @@ native primitives. This repo is the **plugin (code)**; ability content lives in
 
 ## Merging to main
 
-Every change reaches `main` through a PR. Update the docs (`design.md`,
-`roadmap.md`, this file) in the same PR as the change they describe. **Merge
-with a squash merge** (`gh pr merge <n> --squash`) — never a merge commit — with
-a novel, curated title and body describing the change as a whole. `main` is
-linear; never rewrite its history.
+Every change reaches `main` through a PR, and merges follow a fixed process so
+the history stays linear and the docs stay current:
 
-*(This section is the seed of the canonical "squash-merge-policy" ability; once
-the plugin works, this repo should adopt it through the plugin itself.)*
+1. Branch off `main` and open a PR.
+2. **Before merging, update the docs** — `docs/design.md` (source of truth,
+   discussed there before code diverges), `docs/roadmap.md` (check items off in
+   the PR that completes them), and this file — in the same PR as the change
+   they describe. Keeping docs current is part of merging, not a follow-up: do
+   it in the PR so the docs land with the code they describe.
+3. **Merge with a squash merge** — `gh pr merge <n> --squash` — always, never a
+   merge commit: **no merge bubbles, ever.** Write a *novel* title and body
+   describing the change as a whole; omit the refine/debug/troubleshoot churn
+   of the branch (that history stays on the PR). One PR becomes one clean,
+   self-contained commit on a linear `main`.
+
+`main` is pushed and shared — never rewrite its history. The no-merge-commit
+constraint is enforced by the pre-push hook at `.githooks/pre-push`; each clone
+activates it once with `git config core.hooksPath .githooks` (see the README's
+Contributing section).

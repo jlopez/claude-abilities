@@ -1,0 +1,38 @@
+#!/bin/sh
+# pre-push: block merge commits from reaching the protected branch.
+#
+# Installed by the squash-merge-policy ability. This is the constraint half of
+# the policy: it guarantees that no commit with more than one parent is ever
+# pushed to the protected branch from this clone. The judgment half (curated
+# squash messages, docs updated in the PR) lives in CLAUDE.md.
+#
+# Adaptation point: the protected branch name.
+protected="main"
+
+# The all-zero object id, at whatever hash length this repository uses.
+zero=$(git hash-object --stdin </dev/null | tr '0-9a-f' '0')
+
+fail=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [ "$remote_ref" = "refs/heads/$protected" ] || continue
+    [ "$local_sha" = "$zero" ] && continue    # branch deletion: nothing to check
+
+    if [ "$remote_sha" = "$zero" ]; then
+        # Remote branch doesn't exist yet: check everything not already remote.
+        set -- "$local_sha" --not --remotes
+    else
+        set -- "$remote_sha..$local_sha"
+    fi
+
+    merges=$(git rev-list --merges "$@")
+    if [ -n "$merges" ]; then
+        echo "pre-push: refusing to push merge commits to '$protected':" >&2
+        git log --no-walk --oneline $merges >&2
+        echo "" >&2
+        echo "This repository squash-merges only - no merge bubbles." >&2
+        echo "Merge PRs with: gh pr merge <n> --squash" >&2
+        fail=1
+    fi
+done
+
+exit $fail

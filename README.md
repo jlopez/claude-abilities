@@ -66,6 +66,17 @@ Then, in a Claude Code session in that repo:
 To iterate on the plugin locally without installing:
 `claude --plugin-dir <path-to-this-repo>`.
 
+## Contributing
+
+Merges to `main` follow the squash-merge policy in [CLAUDE.md](CLAUDE.md),
+adopted from the `squash-merge-policy` ability (record:
+`.claude/abilities/squash-merge-policy.md`). One-time setup per clone to
+activate the enforcing pre-push hook:
+
+```bash
+git config core.hooksPath .githooks
+```
+
 ## Status
 
 **Plugin skeleton installed and working** (roadmap item 3): manifest,
