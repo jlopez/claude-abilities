@@ -142,3 +142,12 @@ development instructions, not plugin content).
 5. **Plugins are cached on install** (`~/.claude/plugins/cache/…`): the whole
    repo is copied, and edits to the source repo do not propagate until
    `claude plugin update`. For skill iteration, use `claude --plugin-dir`.
+6. **Headless sessions cannot write under the target repo's `.claude/`
+   either** (discovered during item 5's E2E): Write/Edit of
+   `.claude/abilities/…` is auto-denied as a sensitive path even with
+   explicit absolute `Write(//…/.claude/**)` allow rules; only an
+   interactive approval clears it. Skills that write records must therefore
+   degrade gracefully — write the proposed content to a non-`.claude`
+   fallback path and hand the user the exact landing commands (adopt and
+   diff's acknowledge both do). Item 9 must assume record writes need either
+   an interactive session or a landing step outside the harness.

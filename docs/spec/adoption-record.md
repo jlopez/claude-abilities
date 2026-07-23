@@ -140,7 +140,10 @@ state.** They are refreshed only by conscious operations:
   reconciliation (alongside the advanced `baseline`);
 - **acknowledge** — in guideline mode, `/abilities.diff` may offer to record
   deliberate local evolution as the new acknowledged state: refresh the
-  hashes, append a note (§5), do **not** advance `baseline`.
+  hashes (updating a `section:` value when its heading was deliberately
+  renamed, and dropping the entry of an artifact that deliberately no longer
+  exists — the frontmatter lists what is, §2; the note carries why), append a
+  note (§5), do **not** advance `baseline`.
 
 The tripwire itself never writes. Without the acknowledge operation, any
 legitimate local evolution would leave the wire permanently tripped and

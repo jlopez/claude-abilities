@@ -4,10 +4,11 @@ Build order. Each item lands via PR. Get 1–2 right and the commands are
 straightforward views over them; get them wrong and no command polish saves the
 project.
 
-> **Status: items 1–4 done** — the substrate contract (items 1–2), the
-> installable plugin skeleton with `/abilities:setup` (item 3), and
-> `/abilities:adopt` (item 4). Next up: **item 5**. Check items off here, in
-> the PR that completes them.
+> **Status: items 1–5 done** — the substrate contract (items 1–2), the
+> installable plugin skeleton with `/abilities:setup` (item 3),
+> `/abilities:adopt` (item 4), and `/abilities:diff` + `/abilities:remove`
+> with the tripwire script (item 5). Next up: **item 6**. Check items off
+> here, in the PR that completes them.
 
 ## 1. Adoption record schema ✅
 
@@ -56,10 +57,18 @@ shared spec-conformant hashing utility `scripts/artifact-hash` (unit tests in
 end-to-end by adopting `squash-merge-policy` into
 `jlopez/claude-abilities-repository` (its first dogfooding adoption PR).
 
-## 5. `/abilities.diff` + `/abilities.remove`
+## 5. `/abilities.diff` + `/abilities.remove` ✅
 
 Tripwire script (hash + version check, no LLM) → LLM semantic drift explanation,
 mode-aware. Remove as record-guided reversal via PR.
+
+**Done** — `scripts/tripwire` (deterministic, reuses `scripts/artifact-hash`,
+CI-ready exit codes; unit tests in `scripts/tripwire.test.sh`),
+`skills/diff/SKILL.md` (fleet summary, mode-aware analysis, guideline-mode
+acknowledge per spec §4), `skills/remove/SKILL.md` (record-guided reversal).
+Tested end-to-end in a scratch repo — adopt, diff (clean; tripped in both
+modes), acknowledge, remove — plus a clean-wire diff against the live
+adoption in `jlopez/claude-abilities-repository`.
 
 ## 6. `/abilities.update`
 
