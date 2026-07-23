@@ -63,7 +63,7 @@ artifacts:
 | Field | Required | Type | Meaning |
 |---|---|---|---|
 | `id` | yes | string | Ability id, as declared upstream. Must equal the filename stem. |
-| `source` | yes | string | The abilities repository this ability was adopted from, as `owner/repo` (or a full git URL for non-GitHub hosts). Disambiguates once multiple repositories exist; tells `diff`/`update` where upstream is without consulting plugin config. |
+| `source` | yes | string | The abilities repository this ability was adopted from, as `owner/repo` (or a full git URL for non-GitHub hosts). Always the repository's canonical **remote identity, never a machine-local path** — even when adoption read from a local clone, adopt derives this from the clone's remote (the record travels with the repo; a path is meaningless elsewhere). A remote-less experimental repository may be recorded by path only with the user's eyes-open consent and the caveat noted in the prose notes (§5). Disambiguates once multiple repositories exist; tells `diff`/`update` where upstream is without consulting plugin config. |
 | `baseline` | yes | string | The last upstream **version consciously reconciled against** — merge-base semantics ([design §5](../design.md#5-tracking-modes-faithful-vs-guideline)). Advances only on adopt and on a conscious reconcile (`/abilities.update`), never merely because upstream released. |
 | `mode` | yes | `faithful` \| `guideline` | Tracking mode chosen at adoption ([design §5](../design.md#5-tracking-modes-faithful-vs-guideline)). The ability recommends one; the record stores what was actually chosen. |
 | `adopted` | yes | date (`YYYY-MM-DD`) | Date of initial adoption. Never changes afterward. |
@@ -95,13 +95,20 @@ Each entry describes one realized artifact:
 - **Whole-file artifact** (no `section`): SHA-256 of the file's exact bytes.
 - **Section artifact**: extract the block starting at the first line exactly
   equal to the recorded heading, ending just before the next heading of the
-  same or shallower depth (a line starting with the same number of `#` or
-  fewer), or end of file. Strip trailing blank lines. Hash the UTF-8 bytes of
-  the remaining lines joined with `\n`, no trailing newline.
+  same or shallower depth, or end of file. A boundary heading is an **ATX
+  heading line**: a run of `#` no longer than the recorded heading's, followed
+  by a space, a tab, or end of line (so `#include` in a code sample is
+  content, not a boundary). Strip trailing blank lines (empty or
+  whitespace-only). Hash the UTF-8 bytes of the remaining lines joined with
+  `\n`, no trailing newline.
 - If the file is missing, or a section artifact's heading is not found
   (renamed, deleted, merged into another section), the artifact is
   **missing** for tripwire purposes — the LLM pass sorts out whether it
   moved, was renamed, or is gone.
+
+The plugin's `scripts/artifact-hash` is the reference implementation of these
+rules (unit tests alongside it); adopt and the tripwire both call it rather
+than reimplementing.
 
 Section scoping exists so an ability's slice of a shared file (`CLAUDE.md`
 being the canonical case) doesn't trip the wire every time an unrelated

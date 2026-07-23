@@ -4,9 +4,10 @@ Build order. Each item lands via PR. Get 1–2 right and the commands are
 straightforward views over them; get them wrong and no command polish saves the
 project.
 
-> **Status: items 1–3 done** — the substrate contract (items 1–2) and the
-> installable plugin skeleton with `/abilities:setup` (item 3). Next up:
-> **item 4**. Check items off here, in the PR that completes them.
+> **Status: items 1–4 done** — the substrate contract (items 1–2), the
+> installable plugin skeleton with `/abilities:setup` (item 3), and
+> `/abilities:adopt` (item 4). Next up: **item 5**. Check items off here, in
+> the PR that completes them.
 
 ## 1. Adoption record schema ✅
 
@@ -37,11 +38,17 @@ the harness forces colon namespacing; setup config lives in
 `${CLAUDE_PLUGIN_DATA}/config.json`) are recorded in
 [spec/plugin-structure.md](spec/plugin-structure.md).
 
-## 4. `/abilities.adopt`
+## 4. `/abilities.adopt` ✅
 
 The forward transpile: read ability → prompt config → adapt to repo → write
 adoption record → PR. Test end-to-end by adopting squash-merge-policy into a
 real project.
+
+**Done** — `skills/adopt/SKILL.md` (browse mode + full adopt flow), plus the
+shared spec-conformant hashing utility `scripts/artifact-hash` (unit tests in
+`scripts/artifact-hash.test.sh`; item 5's tripwire reuses it). Tested
+end-to-end by adopting `squash-merge-policy` into
+`jlopez/claude-abilities-repository` (its first dogfooding adoption PR).
 
 ## 5. `/abilities.diff` + `/abilities.remove`
 

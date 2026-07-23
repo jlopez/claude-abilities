@@ -1,0 +1,88 @@
+#!/bin/sh
+# artifact-hash — tripwire hashes for adoption-record artifacts.
+#
+# Implements the hashing rules of the adoption record spec §3
+# (docs/spec/adoption-record.md in the plugin repo). Deterministic, no LLM:
+# /abilities:adopt uses it to record hashes; the item-5 tripwire recomputes
+# them with the same script.
+#
+#   artifact-hash <file>              whole-file artifact: SHA-256 of the
+#                                     file's exact bytes.
+#   artifact-hash <file> <heading>    section artifact: extract the block
+#                                     starting at the first line exactly equal
+#                                     to <heading>, ending just before the next
+#                                     ATX heading of the same or shallower
+#                                     depth (or EOF); strip trailing blank
+#                                     lines; hash the UTF-8 bytes of the lines
+#                                     joined with "\n", no trailing newline.
+#
+# stdout: "sha256:<64 lowercase hex>"  exit 0
+#         "missing"                    exit 3  (file absent / heading not found)
+# Usage or internal errors: message on stderr, exit 2.
+set -u
+
+[ $# -ge 1 ] && [ $# -le 2 ] || {
+    echo "usage: artifact-hash <file> [<section-heading>]" >&2
+    exit 2
+}
+file=$1
+
+sha256() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum | cut -d' ' -f1
+    else
+        shasum -a 256 | cut -d' ' -f1
+    fi
+}
+
+[ -f "$file" ] || { echo missing; exit 3; }
+
+if [ $# -eq 1 ]; then
+    printf 'sha256:%s\n' "$(sha256 <"$file")"
+    exit 0
+fi
+
+heading=$2
+
+# Extract the section block. Exit codes: 0 block on stdout, 3 heading not
+# found, 4 recorded heading is not a markdown heading.
+block=$(HEADING="$heading" awk '
+    BEGIN {
+        h = ENVIRON["HEADING"]
+        d = 0
+        while (substr(h, d + 1, 1) == "#") d++
+        if (d == 0) { err = 4; exit 4 }
+        found = 0
+        n = 0
+        last = 0
+    }
+    !found {
+        if ($0 == h) { found = 1; buf[++n] = $0; last = n }
+        next
+    }
+    {
+        # Boundary: an ATX heading of the same or shallower depth — a run of
+        # 1..d "#" followed by space, tab, or end of line.
+        m = 0
+        while (substr($0, m + 1, 1) == "#") m++
+        if (m >= 1 && m <= d) {
+            rest = substr($0, m + 1, 1)
+            if (rest == "" || rest == " " || rest == "\t") exit
+        }
+        buf[++n] = $0
+        if ($0 !~ /^[[:space:]]*$/) last = n
+    }
+    END {
+        if (err) exit err
+        if (!found) exit 3
+        for (i = 1; i <= last; i++) printf "%s%s", buf[i], (i < last ? "\n" : "")
+    }
+' "$file")
+status=$?
+
+case $status in
+0) printf 'sha256:%s\n' "$(printf '%s' "$block" | sha256)" ;;
+3) echo missing; exit 3 ;;
+4) echo "artifact-hash: section heading must start with '#': $heading" >&2; exit 2 ;;
+*) echo "artifact-hash: section extraction failed (awk exit $status)" >&2; exit 2 ;;
+esac
