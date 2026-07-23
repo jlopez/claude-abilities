@@ -1,0 +1,17 @@
+{
+  "name": "claude-abilities",
+  "owner": {
+    "name": "Jesus Lopez",
+    "email": "jesus@cadena.ai"
+  },
+  "metadata": {
+    "description": "Marketplace serving the abilities plugin from its own repository."
+  },
+  "plugins": [
+    {
+      "name": "abilities",
+      "source": ".",
+      "description": "Marketplace of \"abilities\" — LLM-mediated, versioned capabilities that compile into a target repo's own native primitives (CLAUDE.md sections, git hooks, scripts) through reviewable PRs."
+    }
+  ]
+}

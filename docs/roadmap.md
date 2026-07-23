@@ -27,11 +27,16 @@ in the (now-created) `jlopez/claude-abilities-repository`, exercising both the
 hook-constraint and CLAUDE.md-judgment paths plus the `enforce_hook` config
 point. Designed together, as planned ([design §3](design.md#3-ability-format-skill-shaped-directory)).
 
-## 3. Plugin skeleton + `/abilities.setup`
+## 3. Plugin skeleton + `/abilities.setup` ✅
 
 Claude Code plugin scaffolding for the `/abilities.*` commands; `setup` config
 pointing at an abilities repository. Verify current plugin/skill/hook manifest
 formats against docs (claude-code-guide agent) before committing to structure.
+
+**Done.** Verified facts + decisions (command surface is `/abilities:<cmd>` —
+the harness forces colon namespacing; setup config lives in
+`${CLAUDE_PLUGIN_DATA}/config.json`) are recorded in
+[spec/plugin-structure.md](spec/plugin-structure.md).
 
 ## 4. `/abilities.adopt`
 
