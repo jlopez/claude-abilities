@@ -172,6 +172,10 @@ Write what the next agent cannot recover from the artifacts themselves:
   CI"; "user rejected the pre-push hook as too aggressive");
 - adaptations to repo idiom, and which upstream substance they preserve;
 - config rationale where the answer alone doesn't explain itself;
+- **host-side suggestions** the ability made ("suggest, don't do" actions —
+  e.g. disabling merge commits in repository settings): whether the user took
+  them. Nothing local exists to hash, so these notes are the only trace a
+  future `diff`/`remove` has;
 - on reconcile: which upstream changes were taken, which were declined, and
   why.
 
@@ -213,10 +217,10 @@ The ability format (roadmap item 2) **declares**; the adoption record
 | `artifacts` — loose inventory ("a CLAUDE.md section about merging") | `artifacts` — realized paths in this repo, plus hashes |
 | — | `source` — which abilities repository declared all of the above |
 
-Pressure this contract puts on item 2 (flagged, not silently designed here):
-the loose inventory should *hint* when an artifact is expected to be a
-section of a shared file rather than a whole file, so the adopting agent
-knows to record it with `section` scoping.
+The pressure this contract put on item 2 — the loose inventory hinting when
+an artifact is expected to be a section of a shared file, so the adopting
+agent knows to record it with `section` scoping — is resolved: the ability
+format's `artifacts` rules require it.
 
 ## 8. Worked example
 
