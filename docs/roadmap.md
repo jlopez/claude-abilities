@@ -38,6 +38,12 @@ the harness forces colon namespacing; setup config lives in
 `${CLAUDE_PLUGIN_DATA}/config.json`) are recorded in
 [spec/plugin-structure.md](spec/plugin-structure.md).
 
+*Follow-up (#10):* config schema remodeled to v2 — a repository's identity is
+its remote (`source`), a local clone is an optional `localPath` overlay — and
+multi-repo semantics (`--repo`, grouped browse, record-pinned resolution for
+`diff`/`update`/`publish`) defined in
+[spec/repository-resolution.md](spec/repository-resolution.md).
+
 ## 4. `/abilities.adopt` ✅
 
 The forward transpile: read ability → prompt config → adapt to repo → write

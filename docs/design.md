@@ -145,10 +145,14 @@ end in a PR.
 > [spec/plugin-structure.md](spec/plugin-structure.md).
 
 - **`/abilities.setup`** — on-demand only. Configure (or create) the abilities
-  repository this plugin reads from.
+  repositories this plugin reads from. A repository's identity is its remote;
+  a local clone path is an optional overlay for the authoring loop (see
+  [spec/repository-resolution.md](spec/repository-resolution.md)).
 - **`/abilities.adopt <id>`** — read the ability, prompt for config, transpile
-  into the repo, write the adoption record, open a PR. Without an id: browse
-  available abilities, marking installed vs. installable.
+  into the repo, write the adoption record, open a PR. `--repo <name>`
+  qualifies when several repositories offer the same id; without it, ambiguity
+  is asked about, never guessed. Without an id: browse all registered
+  repositories, grouped, marking origin and installed vs. installable.
 - **`/abilities.diff [<id>] [<version>]`** — tripwire first; if tripped, an LLM
   explanation in plain words of what drifted locally and what changed upstream,
   interpreted through the tracking mode.

@@ -35,17 +35,48 @@ shorthand; user-facing text must use the colon form.
 **Plugin-level, in `${CLAUDE_PLUGIN_DATA}/config.json`** (i.e.
 `~/.claude/plugins/data/abilities-claude-abilities/config.json`).
 
-Schema (owned by the setup skill; version 1):
+Schema (owned by the setup skill; version 2):
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "default": "personal",
   "repositories": {
-    "personal": { "source": "/abs/path or owner/repo or URL", "type": "local|git", "addedAt": "YYYY-MM-DD" }
+    "personal": {
+      "source": "owner/repo or full git URL",
+      "localPath": "/abs/path (optional)",
+      "addedAt": "YYYY-MM-DD"
+    }
   }
 }
 ```
+
+- `source` — the repository's **canonical identity**: `owner/repo`
+  (GitHub) or a full git URL (other hosts). Required; this is what adoption
+  records reference. A remote-less local repository stores its absolute path
+  here — a non-portable entry, allowed eyes-open (the user is warned).
+- `localPath` — optional overlay. Present → commands read this clone (the
+  authoring loop); absent → commands fetch into the plugin-managed cache at
+  `${CLAUDE_PLUGIN_DATA}/cache/<name>`. Never part of identity.
+
+Identity matching, cache refresh, and which repository each command uses are
+defined in [repository-resolution.md](repository-resolution.md).
+
+**Migration from v1** (which stored `source` as *either* a path or a remote,
+disambiguated by `type: "local"|"git"`): any command that reads the config
+and finds `"version": 1` migrates every entry, writes the file back as
+version 2, and tells the user. Per entry:
+
+- `type: "git"` → keep `source` (normalized to canonical form), drop `type`.
+- `type: "local"` → the path becomes `localPath`; `source` is derived from
+  the clone's origin remote (`git -C <path> remote get-url origin`,
+  normalized). No remote (or the path no longer exists) → `source` stays the
+  path and the user is warned the entry is non-portable.
+
+If the session cannot write the config file (sandboxed sessions may be
+denied writes to plugin data — gotcha 3 below), migrate in memory, proceed,
+and tell the user to run `/abilities:setup` in an interactive session to
+persist the migration.
 
 Why this location:
 
