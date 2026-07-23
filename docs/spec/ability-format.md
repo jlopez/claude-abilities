@@ -129,6 +129,12 @@ to the adoption record, not here. The inventory deliberately does not name
 target paths, because adoption is adaptive: the same hook may land in
 `.githooks/`, `.husky/`, or a lefthook config depending on repo idiom.
 
+Entries **must say when an artifact is expected to live inside a shared file**
+rather than being a whole file of its own — *"a section in `CLAUDE.md`"*, not
+just *"merge-policy text"*. The adopting agent records such artifacts
+`section`-scoped in the adoption record (see its hashing rules), so unrelated
+edits to the shared file don't trip the wire.
+
 ### `changelog`
 
 A list of per-version entries, **newest first**, each with `version`, `date`
