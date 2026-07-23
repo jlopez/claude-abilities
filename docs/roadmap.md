@@ -4,10 +4,9 @@ Build order. Each item lands via PR. Get 1–2 right and the commands are
 straightforward views over them; get them wrong and no command polish saves the
 project.
 
-> **Status: items 1 and 2 done** — the two halves of the substrate contract
-> (see the interface-contract sections of both specs). Next up: **item 3**
-> (in flight), then item 4. Check items off here, in the PR that completes
-> them.
+> **Status: items 1–3 done** — the substrate contract (items 1–2) and the
+> installable plugin skeleton with `/abilities:setup` (item 3). Next up:
+> **item 4**. Check items off here, in the PR that completes them.
 
 ## 1. Adoption record schema ✅
 
