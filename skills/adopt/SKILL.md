@@ -24,6 +24,10 @@ points at them, they are short:
 - `"${CLAUDE_PLUGIN_ROOT}"/docs/spec/repository-resolution.md` — repository
   identity, matching, cache, and which repository to use when several are
   registered (summarized in step 1; the spec governs).
+- `"${CLAUDE_PLUGIN_ROOT}"/docs/spec/reconciliation.md` — the
+  **classify-and-fold move** for when a target location already holds
+  content (step 6). Shared with `/abilities:update`; never improvise a
+  variant.
 
 Arguments given by the user: `$ARGUMENTS`
 
@@ -148,8 +152,7 @@ Close by telling the user to run `/abilities:adopt <id>` to adopt one (adding
   exist, and stop.
 - If `.claude/abilities/<id>.md` already exists, this ability is already
   adopted here. Summarize the record (baseline, mode, adoption date) and stop
-  — re-adoption is reconciliation, which is `/abilities:update`'s job (not
-  yet implemented).
+  — re-adoption is reconciliation: point the user at `/abilities:update <id>`.
 - Read `ABILITY.md` in full. Its body must contain the four required
   sections: *What this ability does*, *Installation*, *Adapt to the repo*,
   *Keep faithful*. If any is missing the ability is malformed — report it and
@@ -164,6 +167,16 @@ lefthook, pre-commit, an existing `core.hooksPath` dir, or nothing); whether
 there is CI; the bootstrap path a collaborator runs (npm `prepare`,
 `make setup`, README instructions); and the repo's own merge/PR conventions
 (`CLAUDE.md`, `CONTRIBUTING.md`).
+
+**Detect existing content while you survey.** For each artifact in the
+ability's inventory, check whether the repo *already holds* content of that
+concern — at the location you would install to, and under other names too (a
+section with a different heading about the same topic, a hook with the same
+guarantee in another idiom, a hand-written ancestor of the ability). Adopting
+over existing content is update with no record: a cold paste could append a
+duplicate section or clobber local extras. Finding some is not a blocker — it
+switches step 6 to the classify-and-fold move — but detect it *now*, and say
+what you found before prompting the user.
 
 ## 5. Prompt for config and tracking mode
 
@@ -190,6 +203,17 @@ Then follow the ability's body:
 
 - **Installation** — execute the steps in order, honoring each step's config
   gate. Steps materialize assets from `<src>/<id>/assets/`.
+- **Where step 4 found existing content**, do not install generically: run
+  the classify-and-fold move of
+  `"${CLAUDE_PLUGIN_ROOT}"/docs/spec/reconciliation.md` — scope to the
+  ability's concern, diff the existing content against the canonical asset,
+  classify each delta (local extra to preserve / canonical text to take /
+  substance deviation to decide — deviations are the user's call, never
+  yours), fold, and record the classification in the record's prose notes
+  (step 8). Non-interactive sessions follow the spec's §3 rule: safe-default
+  classes may proceed, any substance deviation stops at a written proposal
+  (session output plus an untracked `abilities-adopt-proposal-<id>.md` at the
+  repo root).
 - **Adapt to the repo** — this section licenses adaptation; exercise it
   against what you learned in step 4. The same ability should land as *this
   repo's* version of the capability, not a foreign paste.
@@ -233,7 +257,9 @@ worked example) and follow it exactly. In particular:
 - Prose notes: one dated `## YYYY-MM-DD — Adopted at <version>` entry with
   the decisions and their reasons — adaptations made and what substance they
   preserve, artifacts deliberately skipped and why, config rationale,
-  host-side decisions from step 7. Write it for the next agent.
+  host-side decisions from step 7, and — when step 6 folded existing content
+  — the classification per reconciliation.md §5 (what was preserved, taken,
+  relocated, decided, and why). Write it for the next agent.
 
 ## 9. Open the PR
 

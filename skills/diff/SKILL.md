@@ -139,7 +139,7 @@ Interpret through the **tracking mode**:
 - **`faithful`** — local substantive change is *deviation*; upstream movement
   is something this repo is expected to follow. Present each deviation with
   its remedy: restore from the ability's canonical form, or reconcile via
-  `/abilities:update` (roadmap item 6; its stub answers honestly until then).
+  `/abilities:update`.
 - **`guideline`** — local change is *evolution*; describe how the repo has
   diverged and what upstream now offers, neutrally — divergence is the
   expected shape here, and update is a conversation, not a correction. Then

@@ -158,7 +158,10 @@ end in a PR.
   interpreted through the tracking mode.
 - **`/abilities.update <id>`** — a reconciliation conversation: which upstream
   changes to take, how they interact with local evolution; ends in a PR and an
-  advanced baseline + appended prose notes.
+  advanced baseline + appended prose notes. The collision-handling core — the
+  classify-and-fold move — is specified in
+  [spec/reconciliation.md](spec/reconciliation.md) and shared with `adopt`,
+  which runs it when a target location already holds content.
 - **`/abilities.remove <id>`** — remove what the record says was added (flagging
   anything the user built on top); via PR.
 - **`/abilities.publish`** — the inverse transpile: from this repo's evolved
