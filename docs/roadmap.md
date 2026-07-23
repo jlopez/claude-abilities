@@ -4,11 +4,12 @@ Build order. Each item lands via PR. Get 1–2 right and the commands are
 straightforward views over them; get them wrong and no command polish saves the
 project.
 
-> **Status: items 1–6 done** — the substrate contract (items 1–2), the
-> installable plugin skeleton with `/abilities:setup` (item 3),
-> `/abilities:adopt` (item 4), `/abilities:diff` + `/abilities:remove`
-> with the tripwire script (item 5), and `/abilities:update` (item 6) —
-> the core lifecycle is complete. Next up: **item 7**. Check items off
+> **Status: items 1–7 done — the full command lifecycle is complete**: the
+> substrate contract (items 1–2), the installable plugin skeleton with
+> `/abilities:setup` (item 3), `/abilities:adopt` (item 4), `/abilities:diff`
+> + `/abilities:remove` with the tripwire script (item 5),
+> `/abilities:update` with the shared reconciliation move (item 6), and
+> `/abilities:publish` (item 7). Next up: **items 8–9**. Check items off
 > here, in the PR that completes them.
 
 ## 1. Adoption record schema ✅
@@ -89,10 +90,22 @@ v1.1.0: take-all, mixed take/decline in both modes,
 collision-with-local-evolution, the non-interactive stop, and
 adopt-over-existing-content.
 
-## 7. `/abilities.publish`
+## 7. `/abilities.publish` ✅
 
 The inverse transpile. Parameter: PR to base ability vs. new ability. Agent
 proposes config points while generalizing.
+
+**Done** — `skills/publish/SKILL.md`: evolve mode (gather record + notes +
+tripwire, classify the publishable delta — adaptation vs. improvement vs.
+new-config-dimension — generalize, author the version bump with a
+changelog-intent entry, PR against the record's pinned `source`) and
+new-ability-from-scratch mode (interview, generalization pass, full
+directory, PR to the default or named repository). Publish writes nothing to
+the adopting repo — the post-merge "behind its own contribution" state is
+`/abilities:update`'s to reconcile. Proven end-to-end by publishing
+squash-merge-policy v1.0.1 (the worktree wording clarification discovered in
+this repo's own dogfood adoption, PR #13 learning 4) to
+`jlopez/claude-abilities-repository`.
 
 ## 8. Browser UI
 

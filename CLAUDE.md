@@ -9,10 +9,11 @@ native primitives. This repo is the **plugin (code)**; ability content lives in
   there *before* diverging in code.
 - **Build order:** `docs/roadmap.md`. Items 1–2 (adoption record schema, ability
   format) are the substrate; don't start commands before they're settled.
-- **Status:** the core lifecycle (roadmap items 1–6) is done — `setup`,
-  `adopt`, `diff`, `remove`, and `update`, plus the shared `scripts/tripwire`
-  check and the classify-and-fold reconciliation move
-  (`docs/spec/reconciliation.md`). Next: item 7, `/abilities:publish`.
+- **Status:** the full command lifecycle (roadmap items 1–7) is done —
+  `setup`, `adopt`, `diff`, `remove`, `update`, and `publish`, plus the shared
+  `scripts/tripwire` check and the classify-and-fold reconciliation move
+  (`docs/spec/reconciliation.md`). Next: items 8–9 (browser UI; self-updating
+  CI, gated on update proving trustworthy in real use).
 
 ## Merging to main
 

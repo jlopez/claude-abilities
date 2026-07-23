@@ -49,8 +49,9 @@ plugin.
   an advanced baseline
 - `/abilities:remove` — **implemented.** Remove an adopted ability —
   record-guided reversal, via PR
-- `/abilities:publish` — *stub (roadmap 7).* Upstream a locally evolved ability
-  (PR to the base ability, or a brand-new ability)
+- `/abilities:publish` — **implemented.** Upstream local work as a generalized
+  ability: evolve an adopted ability into a new version PR'd against its
+  pinned source, or author a brand-new ability from scratch
 
 ## Install
 
@@ -84,12 +85,14 @@ git config core.hooksPath .githooks
 
 ## Status
 
-**Roadmap items 1–6 done — the core lifecycle is complete**: the substrate
-specs (adoption record, ability format), the installable plugin skeleton with
-`/abilities:setup`, and the `adopt` → `diff` → `update` → `remove` lifecycle,
-proven by dogfooding (both this repo and the abilities repository adopted
-`squash-merge-policy` through it). `/abilities:publish` (item 7) is the
-remaining honest stub. Verified harness facts and the config-location decision
-are in [docs/spec/plugin-structure.md](docs/spec/plugin-structure.md). The full
+**Roadmap items 1–7 done — the full command lifecycle is complete**: the
+substrate specs (adoption record, ability format), the installable plugin
+skeleton with `/abilities:setup`, and the `adopt` → `diff` → `update` →
+`remove` → `publish` lifecycle, proven by dogfooding — both this repo and the
+abilities repository adopted `squash-merge-policy` through it, and `publish`
+sent v1.0.1 upstream from a clarification discovered during this repo's own
+adoption. Next: the browser UI (item 8) and self-updating CI (item 9).
+Verified harness facts and the config-location decision are in
+[docs/spec/plugin-structure.md](docs/spec/plugin-structure.md). The full
 design is in [docs/design.md](docs/design.md); the build order is in
 [docs/roadmap.md](docs/roadmap.md).
