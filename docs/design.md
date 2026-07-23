@@ -139,6 +139,11 @@ conversation and then in the PR.
 All are agent conversations grounded in the adoption record; adopt/update/remove
 end in a PR.
 
+> **Naming note (2026-07-23):** the harness namespaces plugin commands with a
+> colon, so the implemented surface is `/abilities:setup` etc. The dot form
+> below is kept as design shorthand. See
+> [spec/plugin-structure.md](spec/plugin-structure.md).
+
 - **`/abilities.setup`** — on-demand only. Configure (or create) the abilities
   repository this plugin reads from.
 - **`/abilities.adopt <id>`** — read the ability, prompt for config, transpile

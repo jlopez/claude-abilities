@@ -27,19 +27,50 @@ The plugin is pointed at an abilities repository via `/abilities.setup`; any num
 of repositories (personal, team) can serve as marketplaces without changing the
 plugin.
 
-## Lifecycle commands (planned)
+## Lifecycle commands
 
-- `/abilities.setup` — configure/create an abilities repository
-- `/abilities.adopt` — adopt an ability into the current repo (config prompts → PR)
-- `/abilities.diff` — explain, in plain words, how the repo has drifted from an
-  ability (cheap hash tripwire first; LLM analysis only when something changed)
-- `/abilities.update` — reconcile upstream changes with local state, conversationally
-- `/abilities.remove` — remove an adopted ability via PR
-- `/abilities.publish` — upstream a locally evolved ability (PR to the base
-  ability, or a brand-new ability)
+> The harness namespaces plugin commands with a colon, so the surface is
+> `/abilities:<cmd>` (see
+> [docs/spec/plugin-structure.md](docs/spec/plugin-structure.md)).
+
+- `/abilities:setup` — **implemented.** Configure which abilities repositories
+  the plugin reads from (local path or git repo); config lives in the plugin's
+  persistent data directory
+- `/abilities:adopt` — *stub (roadmap 4).* Adopt an ability into the current
+  repo (config prompts → PR)
+- `/abilities:diff` — *stub (roadmap 5).* Explain, in plain words, how the repo
+  has drifted from an ability (cheap hash tripwire first; LLM analysis only
+  when something changed)
+- `/abilities:update` — *stub (roadmap 6).* Reconcile upstream changes with
+  local state, conversationally
+- `/abilities:remove` — *stub (roadmap 5).* Remove an adopted ability via PR
+- `/abilities:publish` — *stub (roadmap 7).* Upstream a locally evolved ability
+  (PR to the base ability, or a brand-new ability)
+
+## Install
+
+This repo is both the plugin and the marketplace that serves it:
+
+```bash
+claude plugin marketplace add jlopez/claude-abilities   # or a local checkout path
+cd <your-repo>
+claude plugin install abilities@claude-abilities -s project   # or -s user
+```
+
+Then, in a Claude Code session in that repo:
+
+```
+/abilities:setup <path-or-git-repo-of-an-abilities-repository>
+```
+
+To iterate on the plugin locally without installing:
+`claude --plugin-dir <path-to-this-repo>`.
 
 ## Status
 
-**Inception.** Nothing is built yet. The full design is in
-[docs/design.md](docs/design.md); the build order is in
+**Plugin skeleton installed and working** (roadmap item 3): manifest,
+marketplace, `/abilities:setup`, and honest stubs for the other five commands.
+Verified harness facts and the config-location decision are in
+[docs/spec/plugin-structure.md](docs/spec/plugin-structure.md). The full design
+is in [docs/design.md](docs/design.md); the build order is in
 [docs/roadmap.md](docs/roadmap.md).

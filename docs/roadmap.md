@@ -4,10 +4,9 @@ Build order. Each item lands via PR. Get 1–2 right and the commands are
 straightforward views over them; get them wrong and no command polish saves the
 project.
 
-> **Status: items 1 and 2 done** — the two halves of the substrate contract
-> (see the interface-contract sections of both specs). Next up: **item 3**
-> (in flight), then item 4. Check items off here, in the PR that completes
-> them.
+> **Status: items 1–3 done** — the substrate contract (items 1–2) and the
+> installable plugin skeleton with `/abilities:setup` (item 3). Next up:
+> **item 4**. Check items off here, in the PR that completes them.
 
 ## 1. Adoption record schema ✅
 
@@ -27,11 +26,16 @@ in the (now-created) `jlopez/claude-abilities-repository`, exercising both the
 hook-constraint and CLAUDE.md-judgment paths plus the `enforce_hook` config
 point. Designed together, as planned ([design §3](design.md#3-ability-format-skill-shaped-directory)).
 
-## 3. Plugin skeleton + `/abilities.setup`
+## 3. Plugin skeleton + `/abilities.setup` ✅
 
 Claude Code plugin scaffolding for the `/abilities.*` commands; `setup` config
 pointing at an abilities repository. Verify current plugin/skill/hook manifest
 formats against docs (claude-code-guide agent) before committing to structure.
+
+**Done.** Verified facts + decisions (command surface is `/abilities:<cmd>` —
+the harness forces colon namespacing; setup config lives in
+`${CLAUDE_PLUGIN_DATA}/config.json`) are recorded in
+[spec/plugin-structure.md](spec/plugin-structure.md).
 
 ## 4. `/abilities.adopt`
 
