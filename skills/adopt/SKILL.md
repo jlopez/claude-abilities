@@ -1,7 +1,7 @@
 ---
-description: Adopt an ability into the current repo — read it from the configured abilities repository, prompt for its config and tracking mode, transpile it into the repo's own native primitives, write the adoption record, and open a PR. Without an id, browse available abilities.
+description: Adopt an ability into the current repo — read it from a configured abilities repository, prompt for its config and tracking mode, transpile it into the repo's own native primitives, write the adoption record, and open a PR. Without an id, browse all configured repositories.
 disable-model-invocation: true
-argument-hint: "[<ability-id>]"
+argument-hint: "[<ability-id>] [--repo <name>]"
 ---
 
 # /abilities:adopt — adopt an ability into this repo
@@ -21,6 +21,9 @@ points at them, they are short:
   declares and how its body instructs you.
 - `"${CLAUDE_PLUGIN_ROOT}"/docs/spec/adoption-record.md` — the record you must
   write (worked example in `docs/spec/examples/`).
+- `"${CLAUDE_PLUGIN_ROOT}"/docs/spec/repository-resolution.md` — repository
+  identity, matching, cache, and which repository to use when several are
+  registered (summarized in step 1; the spec governs).
 
 Arguments given by the user: `$ARGUMENTS`
 
@@ -59,42 +62,83 @@ answers:
   conclude nothing is configured; tell the user to grant read access to the
   plugin data directory (or re-run and approve the prompt) and **stop**.
 
-Use the `.default` repository unless the user named another one. Resolve its
-`source` by `type`:
+If the config says `"version": 1` (entries carry a `type` field), migrate it
+per the rules in `"${CLAUDE_PLUGIN_ROOT}"/docs/spec/plugin-structure.md`
+(config section) — write it back as version 2 if the session can write there;
+otherwise migrate in memory, proceed, and tell the user to run
+`/abilities:setup` later to persist.
 
-- **`local`** — the source is a directory path; use it directly.
-- **`git`** — shallow-clone to a scratch location and use the clone:
+In version 2, each entry's **`source` is the repository's canonical identity**
+(`owner/repo`, or a full git URL for non-GitHub hosts) and **`localPath` is an
+optional overlay** pointing at a local clone.
 
-  ```bash
-  src=$(mktemp -d)/repo
-  git clone --depth 1 <url> "$src"   # owner/repo shorthand → https://github.com/owner/repo.git
-  ```
+**Pick the repository entry:**
 
-Also determine the **`source` value for the adoption record** — the
-repository's canonical **remote identity, never a local path**. The record
-travels with the target repo; a path is meaningless on any other machine.
+- `--repo <name>` given → that entry, exactly; unknown name → list the
+  registered names and stop.
+- No `--repo`, one registered repository → use it.
+- No `--repo`, several registered → check each one for the ability id (via
+  its checkout, next paragraph): found in exactly one → use it, saying which
+  if it is not the default; found in several → **ask the user which to adopt
+  from — never guess**, even if one is the default; found in none → report
+  not-found against every registered repository (then list available ids as
+  in step 3).
 
-- `git` source — normalize the configured URL to `owner/repo` (keep a full
-  URL only for non-GitHub hosts).
-- `local` source — derive it from the clone
-  (`git -C <path> remote get-url origin`), normalized the same way.
-- **No remote?** Warn the user and ask before proceeding: adopting from a
-  remote-less repository produces a non-portable record (fine for
-  experiments, but eyes-open). If they proceed, record the path and state
-  the caveat in the record's prose notes.
-- **Clone ahead of its remote for this ability?** (uncommitted changes under
-  `<id>/`, or `git -C <path> rev-list @{u}..HEAD -- <id>/` non-empty) —
-  proceed, but say so in the prose notes: the recorded baseline may not yet
+**Obtain the checkout** for the chosen entry:
+
+- `localPath` present → use that working tree directly.
+- `localPath` absent → use the plugin cache
+  `$CONFIG_DIR/cache/<name>`: clone if missing
+  (`git clone --depth 1 <url> "$CONFIG_DIR/cache/<name>"`, where an
+  `owner/repo` source fetches from `https://github.com/owner/repo.git`),
+  otherwise refresh once this run
+  (`git -C <dir> fetch --depth 1 origin HEAD && git -C <dir> reset --hard
+  FETCH_HEAD`). On any inconsistency, delete the cache directory and
+  re-clone.
+
+**The `source` value for the adoption record** is the entry's `source`,
+verbatim — it is already the canonical remote identity, never a local path.
+Two caveats:
+
+- **Path-only entry (no remote)?** The entry's `source` is an absolute path,
+  so the record would be non-portable. Warn the user and ask before
+  proceeding (fine for experiments, but eyes-open). If they proceed, record
+  the path and state the caveat in the record's prose notes.
+- **Reading a `localPath` whose `<id>/` content has not reached the remote
+  default branch?** The upstream a future `diff`/`update` fetches is the
+  remote **default branch** — not the clone's current branch's upstream, so
+  do not check `@{u}` (a clone parked on an up-to-date feature branch would
+  pass while the content is still unpublished). After
+  `git -C <path> fetch origin`, the content is unpublished if either:
+  - `git -C <path> status --porcelain -- <id>/` is non-empty (dirty tree), or
+  - `git -C <path> rev-list origin/<default>..HEAD -- <id>/` is non-empty,
+    with `origin/<default>` from
+    `git -C <path> symbolic-ref --short refs/remotes/origin/HEAD` (if unset,
+    read the default branch off `git -C <path> remote show origin`).
+
+  Proceed, but say so in the prose notes: the recorded baseline may not yet
   exist upstream, and a future `diff`/`update` would otherwise compare
   against a version upstream has never seen.
 
 ## 2. Browse mode (no ability id)
 
-If no id was given: for each top-level directory of the repository containing
-an `ABILITY.md`, read its frontmatter and list `id`, `name`, `version`, and
-`description` in a table. Mark each **installed** (a record exists at
-`.claude/abilities/<id>.md` in the current repo) or **installable**. Close by
-telling the user to run `/abilities:adopt <id>` to adopt one. **Stop.**
+If no id was given: browse across **all** registered repositories, grouped by
+repository (default first). For each repository, obtain its checkout (step 1)
+and, for each top-level directory containing an `ABILITY.md`, read its
+frontmatter and list `id`, `name`, `version`, and `description` in a table.
+Mark each ability:
+
+- **installed** — a record exists at `.claude/abilities/<id>.md` in the
+  current repo *and* its `source` matches this repository's identity
+  (canonical matching per `repository-resolution.md`);
+- **installed from `<name>`** — a record exists but its `source` matches a
+  different registered repository (the same id offered here is a different
+  lineage);
+- **installable** — no record.
+
+Close by telling the user to run `/abilities:adopt <id>` to adopt one (adding
+`--repo <name>` when the same id appears in more than one repository).
+**Stop.**
 
 ## 3. Preflight (with an ability id)
 
