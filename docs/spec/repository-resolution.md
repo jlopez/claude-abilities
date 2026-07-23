@@ -55,7 +55,9 @@ Every command that reads ability content resolves the entry to a directory:
 
 - **`localPath` present** → read that working tree directly. It may contain
   uncommitted or unpushed work — that is the point (the authoring loop);
-  adopt notes ahead-of-remote state in the record's prose notes.
+  adopt notes content not yet on the **remote default branch** (the ref
+  `diff`/`update` will fetch — judged against it, not the current branch's
+  `@{u}`) in the record's prose notes.
 - **`localPath` absent** → use the plugin-managed cache at
   `${CLAUDE_PLUGIN_DATA}/cache/<name>` (`<name>` = the entry's key in
   `repositories`). If the directory does not exist:

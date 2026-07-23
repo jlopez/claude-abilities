@@ -104,12 +104,21 @@ Two caveats:
   so the record would be non-portable. Warn the user and ask before
   proceeding (fine for experiments, but eyes-open). If they proceed, record
   the path and state the caveat in the record's prose notes.
-- **Reading a `localPath` that is ahead of its remote for this ability?**
-  (uncommitted changes under `<id>/`, or
-  `git -C <path> rev-list @{u}..HEAD -- <id>/` non-empty) — proceed, but say
-  so in the prose notes: the recorded baseline may not yet exist upstream,
-  and a future `diff`/`update` would otherwise compare against a version
-  upstream has never seen.
+- **Reading a `localPath` whose `<id>/` content has not reached the remote
+  default branch?** The upstream a future `diff`/`update` fetches is the
+  remote **default branch** — not the clone's current branch's upstream, so
+  do not check `@{u}` (a clone parked on an up-to-date feature branch would
+  pass while the content is still unpublished). After
+  `git -C <path> fetch origin`, the content is unpublished if either:
+  - `git -C <path> status --porcelain -- <id>/` is non-empty (dirty tree), or
+  - `git -C <path> rev-list origin/<default>..HEAD -- <id>/` is non-empty,
+    with `origin/<default>` from
+    `git -C <path> symbolic-ref --short refs/remotes/origin/HEAD` (if unset,
+    read the default branch off `git -C <path> remote show origin`).
+
+  Proceed, but say so in the prose notes: the recorded baseline may not yet
+  exist upstream, and a future `diff`/`update` would otherwise compare
+  against a version upstream has never seen.
 
 ## 2. Browse mode (no ability id)
 
