@@ -4,10 +4,11 @@ Build order. Each item lands via PR. Get 1–2 right and the commands are
 straightforward views over them; get them wrong and no command polish saves the
 project.
 
-> **Status: items 1–5 done** — the substrate contract (items 1–2), the
+> **Status: items 1–6 done** — the substrate contract (items 1–2), the
 > installable plugin skeleton with `/abilities:setup` (item 3),
-> `/abilities:adopt` (item 4), and `/abilities:diff` + `/abilities:remove`
-> with the tripwire script (item 5). Next up: **item 6**. Check items off
+> `/abilities:adopt` (item 4), `/abilities:diff` + `/abilities:remove`
+> with the tripwire script (item 5), and `/abilities:update` (item 6) —
+> the core lifecycle is complete. Next up: **item 7**. Check items off
 > here, in the PR that completes them.
 
 ## 1. Adoption record schema ✅
@@ -70,11 +71,23 @@ Tested end-to-end in a scratch repo — adopt, diff (clean; tripped in both
 modes), acknowledge, remove — plus a clean-wire diff against the live
 adoption in `jlopez/claude-abilities-repository`.
 
-## 6. `/abilities.update`
+## 6. `/abilities.update` ✅
 
 The reconciliation conversation; advances the baseline, appends prose notes.
 Hardest command; last of the core lifecycle. No silent merges — propose,
 explain, human decides.
+
+**Done** — `skills/update/SKILL.md` (tripwire triage, upstream walked
+baseline→latest explained from changelog intent, per-change take/decline/
+adapt with the faithful-mode nudge, baseline advance + `Reconciled` notes,
+non-interactive stop at a written proposal), plus the shared
+**classify-and-fold move** in [spec/reconciliation.md](spec/reconciliation.md)
+— one procedure behind update's collision handling *and* adopt's
+existing-content preflight (PR #13's blind spot, fixed in the same PR).
+Tested end-to-end in scratch repos against a staged `squash-merge-policy`
+v1.1.0: take-all, mixed take/decline in both modes,
+collision-with-local-evolution, the non-interactive stop, and
+adopt-over-existing-content.
 
 ## 7. `/abilities.publish`
 

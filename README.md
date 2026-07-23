@@ -39,12 +39,16 @@ plugin.
 - `/abilities:adopt` — **implemented.** Adopt an ability into the current repo:
   browse mode without an id; with one, config prompts → repo-adapted artifacts
   → adoption record → PR
-- `/abilities:diff` — *stub (roadmap 5).* Explain, in plain words, how the repo
+- `/abilities:diff` — **implemented.** Explain, in plain words, how the repo
   has drifted from an ability (cheap hash tripwire first; LLM analysis only
-  when something changed)
-- `/abilities:update` — *stub (roadmap 6).* Reconcile upstream changes with
-  local state, conversationally
-- `/abilities:remove` — *stub (roadmap 5).* Remove an adopted ability via PR
+  when something changed); in guideline mode can *acknowledge* legitimate
+  local evolution
+- `/abilities:update` — **implemented.** Reconcile upstream changes with
+  local state, conversationally — grouped by version, explained from the
+  changelog's intent, every substance decision the user's; ends in a PR and
+  an advanced baseline
+- `/abilities:remove` — **implemented.** Remove an adopted ability —
+  record-guided reversal, via PR
 - `/abilities:publish` — *stub (roadmap 7).* Upstream a locally evolved ability
   (PR to the base ability, or a brand-new ability)
 
@@ -80,12 +84,12 @@ git config core.hooksPath .githooks
 
 ## Status
 
-**Roadmap items 1–4 done, item 5 in flight**: the substrate specs (adoption
-record, ability format), the installable plugin skeleton with
-`/abilities:setup`, and `/abilities:adopt` — proven by dogfooding (both this
-repo and the abilities repository adopted `squash-merge-policy` through it).
-Next: `/abilities:diff` + `/abilities:remove`; the remaining commands are
-honest stubs. Verified harness facts and the config-location decision are in
-[docs/spec/plugin-structure.md](docs/spec/plugin-structure.md). The full design
-is in [docs/design.md](docs/design.md); the build order is in
+**Roadmap items 1–6 done — the core lifecycle is complete**: the substrate
+specs (adoption record, ability format), the installable plugin skeleton with
+`/abilities:setup`, and the `adopt` → `diff` → `update` → `remove` lifecycle,
+proven by dogfooding (both this repo and the abilities repository adopted
+`squash-merge-policy` through it). `/abilities:publish` (item 7) is the
+remaining honest stub. Verified harness facts and the config-location decision
+are in [docs/spec/plugin-structure.md](docs/spec/plugin-structure.md). The full
+design is in [docs/design.md](docs/design.md); the build order is in
 [docs/roadmap.md](docs/roadmap.md).
