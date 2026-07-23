@@ -47,6 +47,9 @@ Key properties:
 
 ## 3. Ability format (skill-shaped directory)
 
+> Specified normatively in [spec/ability-format.md](spec/ability-format.md);
+> this section is the summary.
+
 One directory per ability in the abilities repository:
 
 ```
@@ -58,7 +61,8 @@ squash-merge-policy/
 
 `ABILITY.md` frontmatter declares:
 
-- `id`, `name`, `version`
+- `id`, `name`, `version`, and a one-line `description` (so browse listings
+  don't require opening `ABILITY.md`)
 - `config` — the config points, each with a prompt, type, and default
 - `mode` — recommended tracking mode (§5), overridable at adoption
 - `artifacts` — a **loose inventory** of what the ability touches ("a `CLAUDE.md`

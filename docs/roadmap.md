@@ -4,9 +4,9 @@ Build order. Each item lands via PR. Get 1–2 right and the commands are
 straightforward views over them; get them wrong and no command polish saves the
 project.
 
-> **Status: item 1 done.** Next up: **item 2** (designed alongside item 1 —
-> they are two halves of one contract; see the interface-contract section of
-> the adoption-record spec). Check items off here, in the PR that completes
+> **Status: items 1 and 2 done** — the two halves of the substrate contract
+> (see the interface-contract sections of both specs). Next up: **item 3**
+> (in flight), then item 4. Check items off here, in the PR that completes
 > them.
 
 ## 1. Adoption record schema ✅
@@ -19,15 +19,13 @@ hashes), and the prose-notes convention (the per-repo LLM changelog).
 **Done** — normative spec in [spec/adoption-record.md](spec/adoption-record.md),
 worked example in [spec/examples/squash-merge-policy.md](spec/examples/squash-merge-policy.md).
 
-## 2. Ability format
+## 2. Ability format ✅
 
-[Design §3](design.md#3-ability-format-skill-shaped-directory). `ABILITY.md`
-frontmatter spec (id/version/config/mode/artifacts/changelog-with-intent), body
-conventions (written to the adopting agent), `assets/`, optional `setup.sh`.
-Author **squash-merge-policy** in `../claude-abilities-repository` as the
-reference instance — designing the format and its first inhabitant together.
-That repo **does not exist yet**; creating it (as `jlopez/claude-abilities-repository`)
-is part of this item.
+**Done.** Spec: [spec/ability-format.md](spec/ability-format.md). Reference
+instance: [squash-merge-policy](https://github.com/jlopez/claude-abilities-repository/tree/main/squash-merge-policy)
+in the (now-created) `jlopez/claude-abilities-repository`, exercising both the
+hook-constraint and CLAUDE.md-judgment paths plus the `enforce_hook` config
+point. Designed together, as planned ([design §3](design.md#3-ability-format-skill-shaped-directory)).
 
 ## 3. Plugin skeleton + `/abilities.setup`
 
