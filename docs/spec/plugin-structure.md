@@ -101,6 +101,10 @@ development instructions, not plugin content).
    prompts once; automation needs pre-granted allow rules
    (`Write(//…/plugins/data/abilities-claude-abilities/**)`, `Bash(jq *)`, …)
    in a *trusted* project's settings. Item 9 must budget for this.
+   Confirmed during item 4: sandboxed headless sessions may be denied even
+   **reads** of `${CLAUDE_PLUGIN_DATA}` — skills that read config there must
+   distinguish "unreadable" from "not configured" (adopt does; future
+   commands should too).
 4. **`claude plugin validate <repo>` validates the marketplace manifest when
    both manifests exist**; point it at `.claude-plugin/plugin.json` to validate
    the plugin itself.

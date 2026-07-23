@@ -9,7 +9,8 @@ native primitives. This repo is the **plugin (code)**; ability content lives in
   there *before* diverging in code.
 - **Build order:** `docs/roadmap.md`. Items 1–2 (adoption record schema, ability
   format) are the substrate; don't start commands before they're settled.
-- **Status:** inception — prefer refining formats over building surface area.
+- **Status:** core lifecycle build-out — the substrate (items 1–2) is settled;
+  commands are landing in roadmap order (`setup` and `adopt` done).
 
 ## Merging to main
 

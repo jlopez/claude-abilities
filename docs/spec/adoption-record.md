@@ -95,13 +95,20 @@ Each entry describes one realized artifact:
 - **Whole-file artifact** (no `section`): SHA-256 of the file's exact bytes.
 - **Section artifact**: extract the block starting at the first line exactly
   equal to the recorded heading, ending just before the next heading of the
-  same or shallower depth (a line starting with the same number of `#` or
-  fewer), or end of file. Strip trailing blank lines. Hash the UTF-8 bytes of
-  the remaining lines joined with `\n`, no trailing newline.
+  same or shallower depth, or end of file. A boundary heading is an **ATX
+  heading line**: a run of `#` no longer than the recorded heading's, followed
+  by a space, a tab, or end of line (so `#include` in a code sample is
+  content, not a boundary). Strip trailing blank lines (empty or
+  whitespace-only). Hash the UTF-8 bytes of the remaining lines joined with
+  `\n`, no trailing newline.
 - If the file is missing, or a section artifact's heading is not found
   (renamed, deleted, merged into another section), the artifact is
   **missing** for tripwire purposes — the LLM pass sorts out whether it
   moved, was renamed, or is gone.
+
+The plugin's `scripts/artifact-hash` is the reference implementation of these
+rules (unit tests alongside it); adopt and the tripwire both call it rather
+than reimplementing.
 
 Section scoping exists so an ability's slice of a shared file (`CLAUDE.md`
 being the canonical case) doesn't trip the wire every time an unrelated
