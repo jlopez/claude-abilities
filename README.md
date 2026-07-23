@@ -36,8 +36,9 @@ plugin.
 - `/abilities:setup` — **implemented.** Configure which abilities repositories
   the plugin reads from (local path or git repo); config lives in the plugin's
   persistent data directory
-- `/abilities:adopt` — *stub (roadmap 4).* Adopt an ability into the current
-  repo (config prompts → PR)
+- `/abilities:adopt` — **implemented.** Adopt an ability into the current repo:
+  browse mode without an id; with one, config prompts → repo-adapted artifacts
+  → adoption record → PR
 - `/abilities:diff` — *stub (roadmap 5).* Explain, in plain words, how the repo
   has drifted from an ability (cheap hash tripwire first; LLM analysis only
   when something changed)
@@ -79,9 +80,12 @@ git config core.hooksPath .githooks
 
 ## Status
 
-**Plugin skeleton installed and working** (roadmap item 3): manifest,
-marketplace, `/abilities:setup`, and honest stubs for the other five commands.
-Verified harness facts and the config-location decision are in
+**Roadmap items 1–4 done, item 5 in flight**: the substrate specs (adoption
+record, ability format), the installable plugin skeleton with
+`/abilities:setup`, and `/abilities:adopt` — proven by dogfooding (both this
+repo and the abilities repository adopted `squash-merge-policy` through it).
+Next: `/abilities:diff` + `/abilities:remove`; the remaining commands are
+honest stubs. Verified harness facts and the config-location decision are in
 [docs/spec/plugin-structure.md](docs/spec/plugin-structure.md). The full design
 is in [docs/design.md](docs/design.md); the build order is in
 [docs/roadmap.md](docs/roadmap.md).
