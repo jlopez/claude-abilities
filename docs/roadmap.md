@@ -4,16 +4,20 @@ Build order. Each item lands via PR. Get 1–2 right and the commands are
 straightforward views over them; get them wrong and no command polish saves the
 project.
 
-> **Status: nothing started.** Next up: **item 1** (with item 2 designed
-> alongside it — they are two halves of one contract). Check items off here, in
-> the PR that completes them.
+> **Status: item 1 done.** Next up: **item 2** (designed alongside item 1 —
+> they are two halves of one contract; see the interface-contract section of
+> the adoption-record spec). Check items off here, in the PR that completes
+> them.
 
-## 1. Adoption record schema
+## 1. Adoption record schema ✅
 
 The identity substrate ([design §4](design.md#4-adoption-record-the-manifest)).
 Finalize and document: file location (`.claude/abilities/<id>.md`), frontmatter
 fields (id, baseline version, mode, config answers, artifact inventory, tripwire
 hashes), and the prose-notes convention (the per-repo LLM changelog).
+
+**Done** — normative spec in [spec/adoption-record.md](spec/adoption-record.md),
+worked example in [spec/examples/squash-merge-policy.md](spec/examples/squash-merge-policy.md).
 
 ## 2. Ability format
 

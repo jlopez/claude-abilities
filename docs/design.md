@@ -82,13 +82,18 @@ pattern-matching over whether this repo even uses the ability. **A per-repo
 adoption record is not optional.** But it is an *adoption record*, not a
 lockfile: its reader is as much a future LLM as a script.
 
-Proposed shape (to finalize in roadmap item 1): one file per adopted ability
-under `.claude/abilities/`, markdown with YAML frontmatter:
+Finalized shape (normative spec: [spec/adoption-record.md](spec/adoption-record.md),
+with a worked example in [spec/examples/](spec/examples/squash-merge-policy.md)):
+one file per adopted ability under `.claude/abilities/`, markdown with YAML
+frontmatter:
 
-- **Structured fields** (frontmatter): ability `id`; **baseline version** — the
-  last upstream version consciously reconciled against (merge-base semantics, §5);
-  tracking `mode`; the **config answers** given at adoption; the artifact
-  inventory as realized in *this* repo; **tripwire hashes** of those artifacts.
+- **Structured fields** (frontmatter): ability `id`; the `source` abilities
+  repository it was adopted from; **baseline version** — the last upstream
+  version consciously reconciled against (merge-base semantics, §5); tracking
+  `mode`; the adoption date; the **config answers** given at adoption; the
+  artifact inventory as realized in *this* repo; **tripwire hashes** of those
+  artifacts. Artifacts that live inside a shared file (a `CLAUDE.md` section)
+  are `section`-scoped so unrelated edits to the file don't trip the wire.
 - **Prose notes** (body): the adoption-time decisions, written for the next agent
   — "skipped the CI portion because this repo has no CI; user rejected the
   pre-push hook as too aggressive; chose pnpm." Appended to on every
@@ -99,7 +104,12 @@ under `.claude/abilities/`, markdown with YAML frontmatter:
 eventual CI job) answer "did anything change on either side?" with a cheap plugin
 script — comparing artifact hashes against recorded ones, and the baseline version
 against upstream latest — so expensive LLM analysis runs only when something
-actually moved. They are *not* the drift verdict; the LLM is.
+actually moved. They are *not* the drift verdict; the LLM is. Hashes record the
+**last acknowledged state** of the artifacts, not upstream's canonical state:
+they refresh only on conscious operations (adopt, update/reconcile, or an
+explicit guideline-mode *acknowledge* that records local evolution without
+advancing the baseline) — otherwise legitimate evolution would leave the wire
+permanently tripped.
 
 ## 5. Tracking modes: faithful vs. guideline
 
