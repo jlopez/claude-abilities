@@ -71,9 +71,22 @@ Use the `.default` repository unless the user named another one. Resolve its
   ```
 
 Also determine the **`source` value for the adoption record** — the
-`owner/repo` the ability actually came from: for `git` sources derive it from
-the URL; for `local` sources ask the clone (`git -C <path> remote get-url
-origin`) and fall back to the configured path only if there is no remote.
+repository's canonical **remote identity, never a local path**. The record
+travels with the target repo; a path is meaningless on any other machine.
+
+- `git` source — normalize the configured URL to `owner/repo` (keep a full
+  URL only for non-GitHub hosts).
+- `local` source — derive it from the clone
+  (`git -C <path> remote get-url origin`), normalized the same way.
+- **No remote?** Warn the user and ask before proceeding: adopting from a
+  remote-less repository produces a non-portable record (fine for
+  experiments, but eyes-open). If they proceed, record the path and state
+  the caveat in the record's prose notes.
+- **Clone ahead of its remote for this ability?** (uncommitted changes under
+  `<id>/`, or `git -C <path> rev-list @{u}..HEAD -- <id>/` non-empty) —
+  proceed, but say so in the prose notes: the recorded baseline may not yet
+  exist upstream, and a future `diff`/`update` would otherwise compare
+  against a version upstream has never seen.
 
 ## 2. Browse mode (no ability id)
 

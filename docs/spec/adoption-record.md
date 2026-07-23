@@ -63,7 +63,7 @@ artifacts:
 | Field | Required | Type | Meaning |
 |---|---|---|---|
 | `id` | yes | string | Ability id, as declared upstream. Must equal the filename stem. |
-| `source` | yes | string | The abilities repository this ability was adopted from, as `owner/repo` (or a full git URL for non-GitHub hosts). Disambiguates once multiple repositories exist; tells `diff`/`update` where upstream is without consulting plugin config. |
+| `source` | yes | string | The abilities repository this ability was adopted from, as `owner/repo` (or a full git URL for non-GitHub hosts). Always the repository's canonical **remote identity, never a machine-local path** — even when adoption read from a local clone, adopt derives this from the clone's remote (the record travels with the repo; a path is meaningless elsewhere). A remote-less experimental repository may be recorded by path only with the user's eyes-open consent and the caveat noted in the prose notes (§5). Disambiguates once multiple repositories exist; tells `diff`/`update` where upstream is without consulting plugin config. |
 | `baseline` | yes | string | The last upstream **version consciously reconciled against** — merge-base semantics ([design §5](../design.md#5-tracking-modes-faithful-vs-guideline)). Advances only on adopt and on a conscious reconcile (`/abilities.update`), never merely because upstream released. |
 | `mode` | yes | `faithful` \| `guideline` | Tracking mode chosen at adoption ([design §5](../design.md#5-tracking-modes-faithful-vs-guideline)). The ability recommends one; the record stores what was actually chosen. |
 | `adopted` | yes | date (`YYYY-MM-DD`) | Date of initial adoption. Never changes afterward. |
