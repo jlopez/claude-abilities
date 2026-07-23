@@ -10,7 +10,8 @@ native primitives. This repo is the **plugin (code)**; ability content lives in
 - **Build order:** `docs/roadmap.md`. Items 1–2 (adoption record schema, ability
   format) are the substrate; don't start commands before they're settled.
 - **Status:** core lifecycle build-out — the substrate (items 1–2) is settled;
-  commands are landing in roadmap order (`setup` and `adopt` done).
+  commands are landing in roadmap order (`setup`, `adopt`, `diff`, and
+  `remove` done, plus the `scripts/tripwire` check they share).
 
 ## Merging to main
 

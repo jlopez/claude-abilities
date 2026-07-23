@@ -1,0 +1,313 @@
+#!/bin/sh
+# tripwire — deterministic "did anything move on either side?" check for
+# adopted abilities. No LLM, never writes.
+#
+# Implements the tripwire semantics of the adoption record spec §4
+# (docs/spec/adoption-record.md in the plugin repo). For each adoption record
+# in the target repo it (1) recomputes every artifact hash with
+# scripts/artifact-hash — the reference implementation of the §3 hashing
+# rules; this script never hashes on its own — and compares against the
+# recorded last-acknowledged hashes, and (2) compares the record's `baseline`
+# version against the latest `version` declared by the ability upstream
+# (resolved from the record's `source`). /abilities:diff runs it before
+# spending an LLM pass; item-9 CI can call it directly.
+#
+# usage: tripwire [-C <repo>] [--local] [--map <source>=<dir>] [<id>...]
+#
+#   -C <repo>            target repo root (default: the git toplevel of the
+#                        current directory, else the current directory)
+#   --local              skip the upstream half entirely (baseline reported
+#                        as "skipped"); the wire then trips on artifact
+#                        changes only. For offline use and for /abilities:remove,
+#                        where upstream is irrelevant.
+#   --map <source>=<dir> for records whose `source` equals <source>, read
+#                        upstream from local directory <dir> instead of
+#                        cloning. Repeatable. An optimization hook — callers
+#                        with a local clone of the source pass it here.
+#   <id>...              check only these abilities (default: every record
+#                        in <repo>/.claude/abilities/)
+#
+# Without --map, a `source` that is a filesystem path is used directly; an
+# `owner/repo` shorthand or git URL is shallow-cloned to a temp dir (one
+# clone per distinct source, removed on exit).
+#
+# stdout: one TSV line per fact, grouped per ability:
+#   <id>\tartifact\t<clean|changed|missing>\t<path>[\t<section>]
+#   <id>\tbaseline\t<current|behind|ahead|unknown|skipped>\t<baseline>\t<latest|->
+#   <id>\twire\t<clean|tripped|unknown>
+#   <id>\terror\t<message>
+#
+# The wire is `tripped` when any artifact is changed/missing, the baseline is
+# behind, or the record itself is unusable (missing, malformed, id mismatch);
+# `unknown` when artifacts are clean but upstream could not be checked;
+# `clean` otherwise. `ahead` (baseline newer than upstream latest — adoption
+# from a clone ahead of its remote) does not trip by itself.
+#
+# exit: 0 every wire clean; 1 any wire tripped; 2 usage/internal error;
+#       3 a named id has no record, or no records exist at all;
+#       4 nothing tripped but some upstream could not be checked.
+#       Priority when several apply: 2 > 1 > 3 > 4 > 0.
+set -u
+
+here=$(cd "$(dirname "$0")" && pwd)
+AH=$here/artifact-hash
+TAB=$(printf '\t')
+
+usage() {
+    echo "usage: tripwire [-C <repo>] [--local] [--map <source>=<dir>] [<id>...]" >&2
+    exit 2
+}
+
+tmp=$(mktemp -d) || exit 2
+trap 'rm -rf "$tmp"' EXIT
+mapfile=$tmp/maps
+: >"$mapfile"
+
+repo=
+local_only=0
+ids=
+
+while [ $# -gt 0 ]; do
+    case $1 in
+    -C)
+        [ $# -ge 2 ] || usage
+        repo=$2
+        shift
+        ;;
+    --local) local_only=1 ;;
+    --map)
+        [ $# -ge 2 ] || usage
+        case $2 in *=*) ;; *) usage ;; esac
+        printf '%s\t%s\n' "${2%%=*}" "${2#*=}" >>"$mapfile"
+        shift
+        ;;
+    --) shift; break ;;
+    -*) usage ;;
+    *) ids="$ids $1" ;;
+    esac
+    shift
+done
+for a in "$@"; do ids="$ids $a"; done
+
+[ -n "$repo" ] || repo=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+[ -d "$repo" ] || { echo "tripwire: no such directory: $repo" >&2; exit 2; }
+records=$repo/.claude/abilities
+
+# Global outcome flags (priority resolved at the end).
+any_tripped=0
+any_norecord=0
+any_unknown=0
+any_checked=0
+
+# --- record parsing ---------------------------------------------------------
+# Emits a flat TSV form of the frontmatter facts the tripwire needs:
+#   META\t<id|source|baseline>\t<value>
+#   ART\t<path>\t<hash>\t<section>   (section last: it may be empty, and a
+#                                     tab run would collapse under IFS)
+#   ERR\t<message>
+parse_record() { # $1 = record file
+    awk '
+        function unq(s) {
+            sub(/^[ \t]+/, "", s); sub(/[ \t\r]+$/, "", s)
+            if (s ~ /^".*"$/ || s ~ /^'\''.*'\''$/) s = substr(s, 2, length(s) - 2)
+            return s
+        }
+        function val(line, key) { sub("^[ \t]*" key ":", "", line); return unq(line) }
+        function flush() {
+            if (havepath) printf "ART\t%s\t%s\t%s\n", path, hash, section
+            havepath = 0; path = ""; section = ""; hash = ""
+        }
+        NR == 1 {
+            if ($0 ~ /^---[ \t\r]*$/) { infm = 1; next }
+            print "ERR\tno YAML frontmatter"; exit
+        }
+        !infm { next }
+        $0 ~ /^---[ \t\r]*$/ { flush(); infm = 0; exit }
+        /^[^ \t#]/ { # top-level key
+            inarts = ($0 ~ /^artifacts:[ \t\r]*$/)
+            if ($0 ~ /^id:/) print "META\tid\t" val($0, "id")
+            else if ($0 ~ /^source:/) print "META\tsource\t" val($0, "source")
+            else if ($0 ~ /^baseline:/) print "META\tbaseline\t" val($0, "baseline")
+            next
+        }
+        inarts {
+            line = $0
+            if (line ~ /^[ \t]*-([ \t]|$)/) { flush(); sub(/^[ \t]*-[ \t]*/, "", line) }
+            if (line ~ /^[ \t]*path:/) { path = val(line, "path"); havepath = 1 }
+            else if (line ~ /^[ \t]*section:/) section = val(line, "section")
+            else if (line ~ /^[ \t]*hash:/) hash = val(line, "hash")
+        }
+        END { if (infm) { flush(); print "ERR\tunterminated frontmatter" } }
+    ' "$1"
+}
+
+# --- upstream resolution ----------------------------------------------------
+# Prints the directory holding the source repository's content, or nothing on
+# failure. Clones (shallow) at most once per distinct source per run.
+resolve_source() { # $1 = source string
+    d=$(awk -F'\t' -v s="$1" '$1 == s { print $2; exit }' "$mapfile")
+    if [ -n "$d" ]; then printf '%s\n' "$d"; return 0; fi
+    case $1 in
+    /* | ./* | ../* | "~"/*) printf '%s\n' "$1"; return 0 ;;
+    esac
+    key=$(printf '%s' "$1" | tr -c 'A-Za-z0-9._-' '_')
+    [ -f "$tmp/fail_$key" ] && return 1
+    cache=$tmp/src_$key
+    if [ ! -d "$cache" ]; then
+        case $1 in
+        *://* | git@*) url=$1 ;;
+        *) url=https://github.com/$1.git ;;
+        esac
+        git clone --quiet --depth 1 "$url" "$cache" >/dev/null 2>&1 \
+            || { : >"$tmp/fail_$key"; return 1; }
+    fi
+    printf '%s\n' "$cache"
+}
+
+# Latest version declared by <dir>/<id>/ABILITY.md, empty if unavailable.
+upstream_version() { # $1 = source dir, $2 = id
+    [ -f "$1/$2/ABILITY.md" ] || return 1
+    awk '
+        NR == 1 { if ($0 ~ /^---[ \t\r]*$/) { infm = 1; next } exit }
+        !infm { exit }
+        $0 ~ /^---[ \t\r]*$/ { exit }
+        /^version:/ {
+            v = $0; sub(/^version:[ \t]*/, "", v)
+            gsub(/["'\'' \t\r]/, "", v); print v; exit
+        }
+    ' "$1/$2/ABILITY.md"
+}
+
+vercmp() { # numeric dotted compare; prints -1|0|1
+    awk -v a="$1" -v b="$2" 'BEGIN {
+        n = split(a, x, "."); m = split(b, y, ".")
+        k = (n > m ? n : m)
+        for (i = 1; i <= k; i++) {
+            ai = x[i] + 0; bi = y[i] + 0
+            if (ai < bi) { print -1; exit }
+            if (ai > bi) { print 1; exit }
+        }
+        print 0
+    }'
+}
+
+# --- per-record check -------------------------------------------------------
+check_record() { # $1 = id, $2 = record file
+    id=$1
+    rec=$2
+    any_checked=1
+    tripped=0
+    unknown=0
+
+    parsed=$tmp/parsed
+    parse_record "$rec" >"$parsed"
+
+    rid=$(awk -F'\t' '$1 == "META" && $2 == "id" { print $3; exit }' "$parsed")
+    source=$(awk -F'\t' '$1 == "META" && $2 == "source" { print $3; exit }' "$parsed")
+    baseline=$(awk -F'\t' '$1 == "META" && $2 == "baseline" { print $3; exit }' "$parsed")
+
+    while IFS=$TAB read -r kind msg _rest; do
+        [ "$kind" = ERR ] || continue
+        printf '%s\terror\t%s\n' "$id" "$msg"
+        tripped=1
+    done <"$parsed"
+    if [ -n "$rid" ] && [ "$rid" != "$id" ]; then
+        printf '%s\terror\trecord id %s does not match filename\n' "$id" "$rid"
+        tripped=1
+    fi
+
+    # Local half: every artifact, via artifact-hash — never ad-hoc hashing.
+    while IFS=$TAB read -r kind path hash section; do
+        [ "$kind" = ART ] || continue
+        if [ -n "$section" ]; then
+            got=$("$AH" "$repo/$path" "$section" 2>"$tmp/ah_err")
+        else
+            got=$("$AH" "$repo/$path" 2>"$tmp/ah_err")
+        fi
+        st=$?
+        case $st in
+        0) [ "$got" = "$hash" ] && a=clean || a=changed ;;
+        3) a=missing ;;
+        *)
+            printf '%s\terror\tartifact-hash failed for %s: %s\n' \
+                "$id" "$path" "$(tr '\n' ' ' <"$tmp/ah_err")"
+            tripped=1
+            continue
+            ;;
+        esac
+        [ "$a" = clean ] || tripped=1
+        if [ -n "$section" ]; then
+            printf '%s\tartifact\t%s\t%s\t%s\n' "$id" "$a" "$path" "$section"
+        else
+            printf '%s\tartifact\t%s\t%s\n' "$id" "$a" "$path"
+        fi
+    done <"$parsed"
+
+    # Upstream half: baseline vs latest declared upstream.
+    if [ "$local_only" = 1 ]; then
+        printf '%s\tbaseline\tskipped\t%s\t-\n' "$id" "${baseline:--}"
+    elif [ -z "$source" ] || [ -z "$baseline" ]; then
+        printf '%s\terror\trecord lacks %s\n' "$id" \
+            "$([ -z "$source" ] && echo source || echo baseline)"
+        printf '%s\tbaseline\tunknown\t%s\t-\n' "$id" "${baseline:--}"
+        tripped=1
+    else
+        srcdir=$(resolve_source "$source")
+        latest=
+        [ -n "$srcdir" ] && latest=$(upstream_version "$srcdir" "$id") || true
+        if [ -z "$srcdir" ]; then
+            printf '%s\terror\tcannot resolve source %s\n' "$id" "$source"
+            printf '%s\tbaseline\tunknown\t%s\t-\n' "$id" "$baseline"
+            unknown=1
+        elif [ -z "$latest" ]; then
+            printf '%s\terror\tno version for %s in source %s\n' "$id" "$id" "$source"
+            printf '%s\tbaseline\tunknown\t%s\t-\n' "$id" "$baseline"
+            unknown=1
+        else
+            case $(vercmp "$baseline" "$latest") in
+            -1) printf '%s\tbaseline\tbehind\t%s\t%s\n' "$id" "$baseline" "$latest"
+                tripped=1 ;;
+            0) printf '%s\tbaseline\tcurrent\t%s\t%s\n' "$id" "$baseline" "$latest" ;;
+            1) printf '%s\tbaseline\tahead\t%s\t%s\n' "$id" "$baseline" "$latest" ;;
+            esac
+        fi
+    fi
+
+    if [ "$tripped" = 1 ]; then
+        printf '%s\twire\ttripped\n' "$id"
+        any_tripped=1
+    elif [ "$unknown" = 1 ]; then
+        printf '%s\twire\tunknown\n' "$id"
+        any_unknown=1
+    else
+        printf '%s\twire\tclean\n' "$id"
+    fi
+}
+
+# --- main -------------------------------------------------------------------
+if [ -n "$ids" ]; then
+    for id in $ids; do
+        if [ -f "$records/$id.md" ]; then
+            check_record "$id" "$records/$id.md"
+        else
+            printf '%s\terror\tno adoption record\n' "$id"
+            any_norecord=1
+        fi
+    done
+else
+    for rec in "$records"/*.md; do
+        [ -f "$rec" ] || continue
+        id=${rec##*/}
+        id=${id%.md}
+        check_record "$id" "$rec"
+    done
+    if [ "$any_checked" = 0 ]; then
+        echo "tripwire: no adoption records in $records" >&2
+        any_norecord=1
+    fi
+fi
+
+[ "$any_tripped" = 1 ] && exit 1
+[ "$any_norecord" = 1 ] && exit 3
+[ "$any_unknown" = 1 ] && exit 4
+exit 0
