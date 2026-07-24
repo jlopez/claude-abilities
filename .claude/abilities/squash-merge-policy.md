@@ -1,7 +1,7 @@
 ---
 id: squash-merge-policy
 source: jlopez/claude-abilities-repository
-baseline: 1.0.0
+baseline: 1.0.1
 mode: faithful
 adopted: 2026-07-23
 config:
@@ -9,7 +9,7 @@ config:
 artifacts:
   - path: CLAUDE.md
     section: "## Merging to main"
-    hash: sha256:902ecd12564639ac94ffb3714857f220fa7656f60390983a7c2c992bf7924a5f
+    hash: sha256:4a05b383f310ea11698fefb12144eba92e4b822385b3e378fd0d032b0ffcfafb
     description: judgment half — PR-only merges, docs in the same PR, curated squash messages
   - path: .githooks/pre-push
     hash: sha256:d7c07bb658b0cc567dee0ff87c67fef0058d4bcb16e4f3cd56a6c612994486fa
@@ -78,3 +78,23 @@ while this PR was open (`gh repo edit jlopez/claude-abilities
 server-side (covering the PR-merge path the pre-push hook cannot see) as
 well as locally by the hook. The adoption entry's "deferred" bullet above is
 history — this entry supersedes it.
+
+## 2026-07-24 — Reconciled 1.0.0 → 1.0.1
+
+One version walked. Upstream 1.0.1 is wording-only: it clarifies that
+`core.hooksPath`, while per-clone, covers every worktree of that clone
+(worktrees share the clone's configuration). Neither canonical asset changed
+— the ability's body step 2 and `setup.sh`'s closing note did — so the change
+classified as **already effectively present**: this repo *originated* it
+(discovered during its own worktree-based adoption, sent upstream via
+`/abilities:publish`), and the changelog states nothing an existing adopter
+must change.
+
+**Taken as an adapt**: with no realized-artifact delta to apply, the user
+chose to land the same clarification in the local docs, apt because this
+repo's checkouts are worktree-based. The `CLAUDE.md` section's closing line
+and the README Contributing lead-in now say the one-time `core.hooksPath`
+setup covers all of the clone's worktrees. The section edit is why the
+`CLAUDE.md` hash was refreshed; `.githooks/pre-push` is untouched and its
+hash unchanged. No new config points were declared between the versions; the
+`config` map is unchanged.

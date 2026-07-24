@@ -96,8 +96,9 @@ the plugin itself during development, skip the cache entirely:
 
 Merges to `main` follow the squash-merge policy in [CLAUDE.md](CLAUDE.md),
 adopted from the `squash-merge-policy` ability (record:
-`.claude/abilities/squash-merge-policy.md`). One-time setup per clone to
-activate the enforcing pre-push hook:
+`.claude/abilities/squash-merge-policy.md`). One-time setup per clone —
+covering all of that clone's worktrees — to activate the enforcing pre-push
+hook:
 
 ```bash
 git config core.hooksPath .githooks
