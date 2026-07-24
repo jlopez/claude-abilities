@@ -58,18 +58,38 @@ plugin.
 This repo is both the plugin and the marketplace that serves it:
 
 ```bash
-claude plugin marketplace add jlopez/claude-abilities   # or a local checkout path
-cd <your-repo>
-claude plugin install abilities@claude-abilities -s project   # or -s user
+claude plugin marketplace add jlopez/claude-abilities
+claude plugin install abilities@claude-abilities        # user scope — the default, and the recommendation
 ```
 
-Then, in a Claude Code session in that repo:
+Then, in a Claude Code session in any repo:
 
 ```
 /abilities:setup <path-or-git-repo-of-an-abilities-repository>
 ```
 
-To iterate on the plugin locally without installing:
+**Install at user scope** (the CLI default). The plugin is the *operator's*
+tool: the whole point of an ability is that target repos need nothing
+installed — artifacts are native, records are inert markdown — so enablement
+belongs in your user settings, not in the repos you operate on. The scopes,
+and the git-worktree behavior that makes the difference bite:
+
+| Scope | Recorded in | Fresh worktrees? | Use when |
+|---|---|---|---|
+| `user` *(default)* | `~/.claude/settings.json` | ✔ works everywhere | **recommended** — your personal toolbox |
+| `project` | `.claude/settings.json` (commit it) | ✔ only if committed | a team repo that wants collaborators prompted to enable the plugin |
+| `local` | `.claude/settings.local.json` (gitignored) | ✘ not present | single-checkout experiments |
+
+A project- or local-scope enablement lives in the directory where you ran the
+install; an uncommitted settings file does not exist in a fresh worktree, and
+the commands simply vanish there (`Unknown command`).
+
+Two more cache facts (details in
+[docs/spec/plugin-structure.md](docs/spec/plugin-structure.md)): the plugin is
+**cached at install** — refresh it with `claude plugin update abilities` after
+upstream changes — and marketplace identity should be the GitHub repo (not a
+local checkout path), so updates pull from the canonical source. To iterate on
+the plugin itself during development, skip the cache entirely:
 `claude --plugin-dir <path-to-this-repo>`.
 
 ## Contributing

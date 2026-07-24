@@ -97,12 +97,30 @@ Setup deliberately does **not** validate the internal structure of a
 repository it registers (that's the item-2 format's job) and does **not** end
 in a PR (it touches plugin config only, never the target repo).
 
+## Recommended install: user scope
+
+`claude plugin install` takes `-s user | project | local` (default `user`).
+**Recommend user scope** (README carries the user-facing version):
+
+- The plugin is the *operator's* tool; the design's promise is that target
+  repos need nothing installed. Enablement belongs in `~/.claude/settings.json`,
+  not scattered through operated-on repos.
+- `project` records enablement in the target's `.claude/settings.json` and
+  `local` in `.claude/settings.local.json`; **uncommitted, neither exists in a
+  fresh git worktree**, where the commands then silently vanish
+  (`Unknown command`) — observed in real use 2026-07-24. `project` is a
+  deliberate choice for a team repo that wants collaborators prompted (commit
+  the settings file); `local` is for single-checkout experiments.
+- Register the marketplace by its GitHub identity (`jlopez/claude-abilities`),
+  not a checkout path, so `claude plugin update abilities` refreshes from the
+  canonical source (gotcha 5: the cache updates only on explicit `update`).
+
 ## Install & E2E test procedure (performed 2026-07-23)
 
 ```bash
 claude plugin marketplace add <path-to-this-repo>   # or jlopez/claude-abilities
 cd <target-repo>
-claude plugin install abilities@claude-abilities -s project   # or -s user
+claude plugin install abilities@claude-abilities -s project   # test used project scope; see "Recommended install" above
 claude plugin details abilities        # inventory: 6 skills, ~350 always-on tokens
 # in a session in <target-repo>:
 #   /abilities:setup <path-to-abilities-repo> --name personal
