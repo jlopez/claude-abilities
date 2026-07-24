@@ -196,8 +196,17 @@ prose notes.
 
 ## 6. Transpile
 
-Branch first: off the default branch, up to date with its remote. Name the
-branch by the repo's own convention if it has one; otherwise `adopt/<id>`.
+Branch first — but look at where you already are before creating anything.
+Fetch the remote; then, if the current branch is not the default and its tip
+is an ancestor of the up-to-date default
+(`git merge-base --is-ancestor HEAD origin/<default>` — typically a
+worktree parked on an already-merged branch), fast-forward it
+(`git merge --ff-only origin/<default>`) and continue in place: no new
+branch, no new worktree. Create a fresh branch off the up-to-date default
+only when the current branch *is* the default, has diverged from it, or
+carries unrelated work — named by the repo's own convention if it has one,
+otherwise `adopt/<id>`. When reusing a branch, its name may not describe
+this operation — acceptable; say so in the PR body (step 9).
 
 Then follow the ability's body:
 
@@ -259,7 +268,11 @@ worked example) and follow it exactly. In particular:
   preserve, artifacts deliberately skipped and why, config rationale,
   host-side decisions from step 7, and — when step 6 folded existing content
   — the classification per reconciliation.md §5 (what was preserved, taken,
-  relocated, decided, and why). Write it for the next agent.
+  relocated, decided, and why). Write it for the next agent. Include what
+  adoption taught you about the *ability itself* — wording that misled you,
+  an instruction that proved missing, an improvement worth publishing — as
+  you discover it: the record is what a future `/abilities:publish` agent
+  reads; a learning left only in the PR body is archaeology.
 
 ## 9. Open the PR
 

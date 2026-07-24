@@ -243,6 +243,51 @@ check "named id: exit 0" "0" "$st"
 check "named id: single wire line" "1" \
     "$(printf '%s\n' "$out" | awk -F'\t' '$2 == "wire"' | wc -l | tr -d ' ')"
 
+# --- git-backed local sources are read at origin/<default> ------------------
+# A clone parked on a stale branch must not skew the upstream half: the
+# tripwire reads the mapped repo at origin/<default>, never the working tree.
+GIT="git -c user.name=t -c user.email=t@t"
+seed=$tmp/gitseed
+mkdir -p "$seed/test-ability"
+cp "$up/test-ability/ABILITY.md" "$seed/test-ability/ABILITY.md"
+$GIT -C "$seed" init --quiet -b main .
+$GIT -C "$seed" add -A
+$GIT -C "$seed" commit --quiet -m seed
+bare=$tmp/gitbare
+git clone --quiet --bare "$seed" "$bare"
+clone=$tmp/gitclone
+git clone --quiet "$bare" "$clone" 2>/dev/null
+# Park the clone on a branch declaring an older version.
+$GIT -C "$clone" checkout --quiet -b stale
+sed -i.bak 's/^version: 1.2.0$/version: 1.1.0/' "$clone/test-ability/ABILITY.md"
+rm -f "$clone/test-ability/ABILITY.md.bak"
+$GIT -C "$clone" commit --quiet -am stale
+GMAP="--map example/abilities=$clone"
+
+# 16. Parked clone, record current with origin/<default> -> current, not ahead.
+record 1.2.0
+out=$("$TW" -C "$repo" $GMAP); st=$?
+check "parked clone: exit 0" "0" "$st"
+check "parked clone: baseline current, from origin not the tree" "current" \
+    "$(printf '%s\n' "$out" | field baseline)"
+
+# 17. Parked clone, record behind origin/<default> -> behind (a working-tree
+# read would report current and silently miss the new upstream version).
+record 1.1.0
+out=$("$TW" -C "$repo" $GMAP); st=$?
+check "parked clone behind: exit 1" "1" "$st"
+check "parked clone behind: baseline behind" "behind" \
+    "$(printf '%s\n' "$out" | field baseline)"
+check "parked clone behind: latest is origin's" "1.2.0" \
+    "$(printf '%s\n' "$out" | awk -F'\t' '$2 == "baseline" { print $5; exit }')"
+
+# 18. Remote-less git directory: no upstream to prefer, read as-is.
+record 1.2.0
+out=$("$TW" -C "$repo" --map "example/abilities=$seed"); st=$?
+check "remote-less dir: exit 0" "0" "$st"
+check "remote-less dir: baseline current from working tree" "current" \
+    "$(printf '%s\n' "$out" | field baseline)"
+
 echo "----"
 echo "pass: $pass  fail: $fail"
 [ "$fail" -eq 0 ]

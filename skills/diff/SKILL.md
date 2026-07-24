@@ -71,7 +71,10 @@ Two refinements:
   record's `source` qualifies. This is strictly an optimization: if the config
   is missing, unreadable (sandboxed sessions may be denied reads of plugin
   data — that is *not* "not configured"), or doesn't match, just let the
-  tripwire clone. Never block or fail over this.
+  tripwire clone. Never block or fail over this. Whatever branch the local
+  clone happens to be parked on is irrelevant — the script reads a mapped
+  git directory at `origin/<default>` (fetch first), never its working tree
+  (repository-resolution.md states the rule).
 - **Exit 4 / baseline `unknown`** means upstream could not be checked
   (offline, source gone). Report the local half's result and say plainly that
   the upstream half is unverified — do not guess it.
@@ -110,7 +113,9 @@ Now spend the LLM pass. Gather context in the spec's §6 reading order:
    `missing` artifact, hunt before concluding: a renamed heading or a moved
    file is *drift with a story*, not necessarily removal.
 4. **Upstream, at both ends.** Resolve the record's `source` (reuse the
-   tripwire's clone if you kept it, or the `--map` directory). Read the
+   tripwire's clone if you kept it, or the `--map` directory — read a local
+   clone at `origin/<default>` after a fetch, as the tripwire does, never
+   its parked working tree). Read the
    ability's current `ABILITY.md` — body, *Keep faithful*, changelog — and its
    `assets/`. For the **baseline side**, find the source repo's last commit
    where `<id>/ABILITY.md` declared `version: <baseline>` (unshallow first:
@@ -170,7 +175,11 @@ With the user's yes:
    ```
 
    A paragraph or three: what evolved, and why — as stated by the user or
-   evident from the change. Written for the next agent.
+   evident from the change. Written for the next agent. Include what the
+   analysis taught you about the *ability itself* — wording that misled, an
+   instruction that proved missing, an improvement worth publishing — the
+   record is what a future `/abilities:publish` agent reads; a learning
+   left only in session output or a PR body is archaeology.
 3. **Do not touch `baseline`**, the mode, config, or anything else. If the
    baseline is also `behind`, say that acknowledge won't clear that half — the
    wire stays tripped on upstream movement until a real reconcile

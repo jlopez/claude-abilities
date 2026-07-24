@@ -72,6 +72,11 @@ Tested end-to-end in a scratch repo — adopt, diff (clean; tripped in both
 modes), acknowledge, remove — plus a clean-wire diff against the live
 adoption in `jlopez/claude-abilities-repository`.
 
+*Follow-up (#20):* the tripwire reads a locally resolved source (`--map` or
+path) at `origin/<default>` after a fetch — never its working tree, which
+may be parked on a stale branch; rule stated in
+[spec/repository-resolution.md](spec/repository-resolution.md).
+
 ## 6. `/abilities.update` ✅
 
 The reconciliation conversation; advances the baseline, appends prose notes.
@@ -89,6 +94,14 @@ Tested end-to-end in scratch repos against a staged `squash-merge-policy`
 v1.1.0: take-all, mixed take/decline in both modes,
 collision-with-local-evolution, the non-interactive stop, and
 adopt-over-existing-content.
+
+*Follow-up (#20):* two field learnings folded back — adopt/update's branch
+step fast-forwards and reuses a current branch whose tip is an ancestor of
+the up-to-date default instead of spawning a new worktree; and observations
+about the *ability itself* (misleading wording, missing instruction,
+publishable improvement) are routed into the record's prose notes
+([spec/adoption-record.md](spec/adoption-record.md) §5) as they are
+discovered, not left in PR bodies.
 
 ## 7. `/abilities.publish` ✅
 

@@ -187,7 +187,12 @@ Write what the next agent cannot recover from the artifacts themselves:
   them. Nothing local exists to hash, so these notes are the only trace a
   future `diff`/`remove` has;
 - on reconcile: which upstream changes were taken, which were declined, and
-  why.
+  why;
+- **observations about the ability itself**, recorded as they are
+  discovered: wording that misled the operating agent, an instruction that
+  proved missing, an improvement worth publishing upstream. The record is
+  what a future `/abilities.publish` agent reads — a learning that lives
+  only in a PR body is archaeology by the time it matters.
 
 Do not restate the diff or duplicate the frontmatter. A good entry is a
 paragraph or three, not a report.

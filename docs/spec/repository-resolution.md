@@ -79,6 +79,21 @@ Every command that reads ability content resolves the entry to a directory:
 - **Path-only (non-portable) entry** → read the path directly; there is no
   upstream to fetch.
 
+### Upstream comparisons read `origin/<default>`, never a parked working tree
+
+The rules above resolve a *directory*; what to read in it depends on the
+operation. **Adoption reads the working tree deliberately** — uncommitted and
+unpushed work is the authoring loop's point. But an **upstream comparison** —
+the tripwire's baseline-vs-latest half (including a directory passed via
+`--map`), and `diff`/`update` reading the ability as upstream declares it —
+must read the directory's content at **`origin/<default>`** (fetch first),
+never its working tree: a clone may sit parked on a stale or gone branch, and
+a working-tree read silently compares against old content.
+`scripts/tripwire` implements this — a mapped or path-resolved directory that
+is a git repo with an `origin` remote is snapshotted at `origin/<default>`
+before reading. A directory with no `origin` remote (the non-portable case)
+has no upstream to prefer and is read as-is.
+
 ## Which repository a command uses
 
 - **`/abilities:setup`** — manages the entries themselves; no resolution.

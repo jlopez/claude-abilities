@@ -88,7 +88,10 @@ CONFIG_DIR="${CLAUDE_PLUGIN_DATA:-$HOME/.claude/plugins/data/abilities-claude-ab
 a v1 `local`-type entry counts the same) qualifies for
 `--map <source>=<dir>`. Strictly an optimization: config missing, unreadable
 (sandboxed sessions may be denied reads of plugin data — that is *not* "not
-configured"), or unmatched → let the tripwire clone.
+configured"), or unmatched → let the tripwire clone. Whatever branch the
+local clone is parked on is irrelevant — the script reads a mapped git
+directory at `origin/<default>` (fetch first), never its working tree
+(repository-resolution.md states the rule).
 
 Triage on the `baseline` fact:
 
@@ -112,7 +115,9 @@ Triage on the `baseline` fact:
 
 Resolve the record's `source` per repository-resolution.md (registered entry
 → its `localPath` or refreshed cache; unregistered → offer to register, or a
-temporary shallow clone for this run). Then read:
+temporary shallow clone for this run). A `localPath` clone is read at
+`origin/<default>` after a fetch — the spec's upstream-comparison rule —
+never its parked working tree. Then read:
 
 1. **Latest**: the ability's current `ABILITY.md` — body, *Adapt to the
    repo*, *Keep faithful*, full changelog — and its `assets/`.
@@ -168,8 +173,17 @@ Mode shapes the framing, not the mechanics:
 
 ## 5. Apply what was taken
 
-Branch first: off the default branch, up to date with its remote. Name the
-branch by the repo's own convention if it has one; otherwise `update/<id>`.
+Branch first — but look at where you already are before creating anything.
+Fetch the remote; then, if the current branch is not the default and its tip
+is an ancestor of the up-to-date default
+(`git merge-base --is-ancestor HEAD origin/<default>` — typically a
+worktree parked on an already-merged branch), fast-forward it
+(`git merge --ff-only origin/<default>`) and continue in place: no new
+branch, no new worktree. Create a fresh branch off the up-to-date default
+only when the current branch *is* the default, has diverged from it, or
+carries unrelated work — named by the repo's own convention if it has one,
+otherwise `update/<id>`. When reusing a branch, its name may not describe
+this operation — acceptable; say so in the PR body (step 7).
 
 - Apply each **take** honoring the *Adapt to the repo* and **Keep faithful of
   the NEW version** — the invariants you must land are the latest version's,
@@ -209,7 +223,11 @@ All in the same operation — a half-updated record is worse than none:
   What was **taken**, **declined**, and **adapted** — and *why*, per version
   walked; collision classifications per reconciliation.md §5; the faithful
   decline/mode answer if step 4 raised it; new config rationale. Written for
-  the next agent.
+  the next agent. Include what the reconcile taught you about the *ability
+  itself* — wording that misled you, an instruction that proved missing, an
+  improvement worth publishing — as you discover it: the record is what a
+  future `/abilities:publish` agent reads; a learning left only in the PR
+  body is archaeology.
 
 ## 7. Open the PR
 
