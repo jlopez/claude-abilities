@@ -31,6 +31,12 @@
 # `owner/repo` shorthand or git URL is shallow-cloned to a temp dir (one
 # clone per distinct source, removed on exit).
 #
+# A locally resolved directory (--map or path source) that is a git repo with
+# an `origin` remote is read at `origin/<default>` (fetched first, best
+# effort) — never its working tree, which may be parked on a stale branch and
+# silently compare against old content. A remote-less directory is read
+# as-is: there is no upstream to prefer.
+#
 # stdout: one TSV line per fact, grouped per ability:
 #   <id>\tartifact\t<clean|changed|missing>\t<path>[\t<section>]
 #   <id>\tbaseline\t<current|behind|ahead|unknown|skipped>\t<baseline>\t<latest|->
@@ -142,13 +148,45 @@ parse_record() { # $1 = record file
 }
 
 # --- upstream resolution ----------------------------------------------------
+# For a local directory that is a git repo with an `origin` remote, prints a
+# snapshot of its content at origin/<default> (fetch first, best effort) —
+# never the working tree, which may be parked anywhere. A directory that is
+# not a git repo, or has no origin remote, is printed as-is (nothing to
+# prefer). Fails (prints nothing) when the remote default branch cannot be
+# determined or extracted. One snapshot per distinct directory per run.
+resolve_local() { # $1 = directory
+    git -C "$1" rev-parse --git-dir >/dev/null 2>&1 \
+        && git -C "$1" remote get-url origin >/dev/null 2>&1 \
+        || { printf '%s\n' "$1"; return 0; }
+    lkey=$(printf '%s' "$1" | tr -c 'A-Za-z0-9._-' '_')
+    snap=$tmp/ro_$lkey
+    if [ ! -d "$snap" ]; then
+        [ -f "$tmp/rofail_$lkey" ] && return 1
+        git -C "$1" fetch --quiet origin >/dev/null 2>&1 || true
+        defref=$(git -C "$1" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)
+        [ -n "$defref" ] || defref=$(git -C "$1" ls-remote --symref origin HEAD 2>/dev/null \
+            | awk '$1 == "ref:" { sub("refs/heads/", "", $2); print "origin/" $2; exit }')
+        if [ -z "$defref" ] \
+            || ! git -C "$1" archive "$defref" >"$tmp/ro_$lkey.tar" 2>/dev/null; then
+            : >"$tmp/rofail_$lkey"
+            return 1
+        fi
+        mkdir -p "$snap"
+        tar -xf "$tmp/ro_$lkey.tar" -C "$snap" \
+            || { rm -rf "$snap"; : >"$tmp/rofail_$lkey"; return 1; }
+    fi
+    # The directory may be a subdirectory of the clone; the archive holds
+    # full-repo paths, so re-append the prefix.
+    printf '%s/%s\n' "$snap" "$(git -C "$1" rev-parse --show-prefix 2>/dev/null)"
+}
+
 # Prints the directory holding the source repository's content, or nothing on
 # failure. Clones (shallow) at most once per distinct source per run.
 resolve_source() { # $1 = source string
     d=$(awk -F'\t' -v s="$1" '$1 == s { print $2; exit }' "$mapfile")
-    if [ -n "$d" ]; then printf '%s\n' "$d"; return 0; fi
+    if [ -n "$d" ]; then resolve_local "$d"; return $?; fi
     case $1 in
-    /* | ./* | ../* | "~"/*) printf '%s\n' "$1"; return 0 ;;
+    /* | ./* | ../* | "~"/*) resolve_local "$1"; return $? ;;
     esac
     key=$(printf '%s' "$1" | tr -c 'A-Za-z0-9._-' '_')
     [ -f "$tmp/fail_$key" ] && return 1
