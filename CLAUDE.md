@@ -35,4 +35,5 @@ the history stays linear and the docs stay current:
 `main` is pushed and shared — never rewrite its history. The no-merge-commit
 constraint is enforced by the pre-push hook at `.githooks/pre-push`; each clone
 activates it once with `git config core.hooksPath .githooks` (see the README's
-Contributing section).
+Contributing section), and that one setting covers every worktree of the clone
+— worktrees share the clone's configuration.
