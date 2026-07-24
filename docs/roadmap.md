@@ -4,13 +4,14 @@ Build order. Each item lands via PR. Get 1–2 right and the commands are
 straightforward views over them; get them wrong and no command polish saves the
 project.
 
-> **Status: items 1–7 done — the full command lifecycle is complete**: the
-> substrate contract (items 1–2), the installable plugin skeleton with
-> `/abilities:setup` (item 3), `/abilities:adopt` (item 4), `/abilities:diff`
-> + `/abilities:remove` with the tripwire script (item 5),
-> `/abilities:update` with the shared reconciliation move (item 6), and
-> `/abilities:publish` (item 7). Next up: **items 8–9**. Check items off
-> here, in the PR that completes them.
+> **Status: items 1–8 done**: the substrate contract (items 1–2), the
+> installable plugin skeleton with `/abilities:setup` (item 3),
+> `/abilities:adopt` (item 4), `/abilities:diff` + `/abilities:remove` with
+> the tripwire script (item 5), `/abilities:update` with the shared
+> reconciliation move (item 6), `/abilities:publish` (item 7), and the
+> browser UI as the `catalog-page` ability (item 8). Next up: **item 9**,
+> gated on item 6 proving trustworthy in real use. Check items off here, in
+> the PR that completes them.
 
 ## 1. Adoption record schema ✅
 
@@ -120,10 +121,25 @@ squash-merge-policy v1.0.1 (the worktree wording clarification discovered in
 this repo's own dogfood adoption, PR #13 learning 4) to
 `jlopez/claude-abilities-repository`.
 
-## 8. Browser UI
+## 8. Browser UI ✅
 
 Copy-the-`/adopt`-line as the primary path; anything richer (Artifact with
 mediated install) is v2.
+
+**Done** — implemented **as an ability**, not plugin code:
+[`catalog-page` 1.0.0](https://github.com/jlopez/claude-abilities-repository/tree/main/catalog-page)
+in the abilities repository, adopted *by* that repository through the normal
+`/abilities:adopt` flow (its PRs #4 and #5) — an abilities repository is a
+repo like any other, and its catalog is a capability it can adopt. A static
+GitHub Pages page generated from each ability's `ABILITY.md` frontmatter
+(name, description, version, recommended mode, config-point count, latest
+changelog intent); each card's primary action is a copy-to-clipboard
+`/abilities:adopt <id>` line; no install-state marking (that is adopt browse
+mode's local concern). Deliberately dependency-light per this item's
+guidance: POSIX sh + awk generator plus the official Pages actions — no
+package manager, no build ecosystem. Pages enablement is a host-side
+suggest-don't-do step surfaced to the repo admin, never executed by the
+adopting agent.
 
 ## 9. Self-updating CI
 
